@@ -712,8 +712,8 @@ function calcRoomSF(room) {
 
   // Trim SF: baseboard only (perimeter × 0.33 LF — base molding)
   const trimSF = perimeter * 0.33;
-  // Door SF: door panels (34 SF per door — both faces combined)
-  const doorSF = totalDoors * 34;
+  // Door SF: room doors 34 SF (2-sided), closet/bifold 17 SF (1-sided)
+  const doorSF = (doorsFlush * 34) + (doorsPanel * 17);
   // Window SF: window casing/frames (18 SF each)
   const windowSF = (parseInt(room.windows) || 0) * 18;
 
@@ -788,11 +788,11 @@ function renderRooms() {
         <div class="section-label">Openings</div>
         <div class="form-grid thirds">
           <div class="field">
-            <label>Flush Doors</label>
+            <label>🚪 Room Doors (2-sided)</label>
             <input type="number" value="${room.doors_flush}" onchange="updateRoomField(${room.id}, 'doors_flush', this.value)" min="0">
           </div>
           <div class="field">
-            <label>Panel Doors</label>
+            <label>🚪 Closet/Bifold (1-sided)</label>
             <input type="number" value="${room.doors_panel}" onchange="updateRoomField(${room.id}, 'doors_panel', this.value)" min="0">
           </div>
           <div class="field">
@@ -843,9 +843,9 @@ function calculate() {
     if (room.surfaces.includes('doors') && sf.doors > 0) {
       totalDoorSF += sf.doors;
       doorCoatSF += sf.doors * c;
-      // Flush doors: PCA door_flush rate / Panel doors: ~25% slower (detail work)
-      const h1 = (sf.doorsFlush * 34) / RATES.door_flush_1st + (sf.doorsPanel * 34) / (RATES.door_flush_1st * 0.75);
-      const hAdd = (sf.doorsFlush * 34) / RATES.door_flush_add + (sf.doorsPanel * 34) / (RATES.door_flush_add * 0.75);
+      // Room doors (2-sided, 34 SF): flush rate | Closet/bifold (1-sided, 17 SF): 25% slower (rails + panels)
+      const h1 = (sf.doorsFlush * 34) / RATES.door_flush_1st + (sf.doorsPanel * 17) / (RATES.door_flush_1st * 0.75);
+      const hAdd = (sf.doorsFlush * 34) / RATES.door_flush_add + (sf.doorsPanel * 17) / (RATES.door_flush_add * 0.75);
       doorHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
     }
     if (room.surfaces.includes('windows') && sf.windows > 0) {
@@ -976,7 +976,7 @@ function renderResults() {
   if (r.totalWallSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🧱 Walls</span><span class="val">${r.totalWallSF.toFixed(0)} SF</span></div>`;
   if (r.totalCeilSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">⬜ Ceiling</span><span class="val">${r.totalCeilSF.toFixed(0)} SF</span></div>`;
   if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">📏 Trim (baseboard)</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
-  if (r.totalDoorSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🚪 Doors</span><span class="val">${r.totalDoorSF.toFixed(0)} SF</span></div>`;
+  if (r.totalDoorSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🚪 Doors (room 2-sided + closet 1-sided)</span><span class="val">${r.totalDoorSF.toFixed(0)} SF</span></div>`;
   if (r.totalWindowSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Windows</span><span class="val">${r.totalWindowSF.toFixed(0)} SF</span></div>`;
   if (r.hasPrimer) surfHTML += `<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (1 coat)</span><span class="val">${(r.totalWallSF+r.totalCeilSF).toFixed(0)} SF</span></div>`;
   document.getElementById('r-surfaces').innerHTML = surfHTML;
