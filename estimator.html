@@ -1,0 +1,1007 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>RenewBuild Painting Estimator</title>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0C84A;
+    --dark: #1a1a2e;
+    --dark2: #16213e;
+    --dark3: #0f3460;
+    --white: #ffffff;
+    --gray: #f5f5f5;
+    --gray2: #e0e0e0;
+    --text: #2c2c2c;
+    --text-light: #666;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.12);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: var(--text); min-height: 100vh; }
+
+  /* HEADER */
+  header { background: var(--dark); padding: 16px 20px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 12px rgba(0,0,0,0.3); }
+  header .logo { color: var(--gold); font-size: 20px; font-weight: 800; letter-spacing: -0.5px; }
+  header .logo span { color: var(--white); }
+  header .badge { background: var(--gold); color: var(--dark); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* MARKUP BADGE */
+  .markup-badge { display: inline-flex; align-items: center; gap: 4px; background: #e8f5e9; color: var(--green); border: 1.5px solid #a8e6bf; border-radius: 20px; padding: 4px 10px; font-size: 12px; font-weight: 700; }
+  .markup-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  .markup-val { font-size: 22px; font-weight: 900; color: var(--green); min-width: 48px; text-align: center; }
+
+  /* MAIN */
+  main { max-width: 720px; margin: 0 auto; padding: 20px 16px 100px; }
+
+  /* SECTION CARD */
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+  .card-header { background: var(--dark2); color: var(--white); padding: 14px 18px; display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 14px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-header .icon { color: var(--gold); font-size: 16px; }
+  .card-body { padding: 18px; }
+
+  /* FORM ELEMENTS */
+  .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .form-grid.thirds { grid-template-columns: 1fr 1fr 1fr; }
+  .form-grid.full { grid-template-columns: 1fr; }
+  .field { display: flex; flex-direction: column; gap: 5px; }
+  .field label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.4px; }
+  .field input, .field select { border: 1.5px solid var(--gray2); border-radius: 8px; padding: 10px 12px; font-size: 15px; color: var(--text); background: var(--white); outline: none; width: 100%; transition: border-color 0.2s; }
+  .field input:focus, .field select:focus { border-color: var(--gold); }
+  .field input[type="number"] { -moz-appearance: textfield; }
+  .field input[type="number"]::-webkit-outer-spin-button, .field input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; }
+
+  /* JOB TYPE TABS */
+  .job-tabs { display: flex; gap: 8px; margin-bottom: 4px; }
+  .job-tab { flex: 1; padding: 12px 8px; border: 2px solid var(--gray2); border-radius: 10px; text-align: center; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--text-light); transition: all 0.2s; background: var(--white); }
+  .job-tab.active { border-color: var(--gold); background: #FFF8E8; color: var(--dark); }
+  .job-tab .tab-icon { font-size: 20px; display: block; margin-bottom: 3px; }
+
+  /* ROOMS */
+  .room-card { border: 1.5px solid var(--gray2); border-radius: 10px; margin-bottom: 12px; overflow: hidden; }
+  .room-header { background: var(--gray); padding: 12px 15px; display: flex; justify-content: space-between; align-items: center; cursor: pointer; }
+  .room-name { font-weight: 700; font-size: 14px; color: var(--dark); }
+  .room-sf { font-size: 12px; color: var(--text-light); }
+  .room-body { padding: 15px; display: none; }
+  .room-body.open { display: block; }
+  .room-toggle { color: var(--text-light); font-size: 18px; transition: transform 0.2s; }
+  .room-toggle.open { transform: rotate(180deg); }
+
+  /* CHECKBOXES */
+  .surfaces-grid { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0; }
+  .surface-chip { display: flex; align-items: center; gap: 6px; padding: 7px 12px; border: 1.5px solid var(--gray2); border-radius: 20px; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-light); transition: all 0.2s; user-select: none; }
+  .surface-chip input[type="checkbox"] { display: none; }
+  .surface-chip.checked { border-color: var(--gold); background: #FFF8E8; color: var(--dark); }
+
+  /* DIVIDER */
+  .divider { height: 1px; background: var(--gray2); margin: 14px 0; }
+  .section-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; margin-bottom: 10px; }
+
+  /* BUTTONS */
+  .btn { display: flex; align-items: center; justify-content: center; gap: 6px; padding: 12px 20px; border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; }
+  .btn-gold { background: var(--gold); color: var(--dark); }
+  .btn-gold:hover { background: var(--gold-light); }
+  .btn-dark { background: var(--dark); color: var(--white); }
+  .btn-outline { background: transparent; color: var(--text-light); border: 1.5px solid var(--gray2); }
+  .btn-outline:hover { border-color: var(--gold); color: var(--dark); }
+  .btn-danger { background: #fdf0ef; color: var(--red); border: 1.5px solid #f5c6c2; }
+  .btn-sm { padding: 7px 12px; font-size: 12px; border-radius: 7px; }
+  .btn-full { width: 100%; }
+
+  /* MARGIN SLIDER */
+  .margin-display { text-align: center; font-size: 28px; font-weight: 800; color: var(--gold); }
+  .margin-display span { font-size: 14px; color: var(--text-light); display: block; font-weight: 500; margin-top: -4px; }
+  input[type="range"] { width: 100%; accent-color: var(--gold); height: 6px; margin: 8px 0; }
+  .margin-labels { display: flex; justify-content: space-between; font-size: 11px; color: var(--text-light); }
+
+  /* RESULTS */
+  .result-row { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--gray2); }
+  .result-row:last-child { border-bottom: none; }
+  .result-label { font-size: 14px; color: var(--text); }
+  .result-label small { display: block; color: var(--text-light); font-size: 11px; }
+  .result-value { font-size: 15px; font-weight: 700; color: var(--dark); }
+  .result-value.green { color: var(--green); }
+  .result-value.gold { color: var(--gold); font-size: 18px; }
+
+  .price-box { background: var(--dark); border-radius: 12px; padding: 20px; text-align: center; margin: 16px 0; }
+  .price-box .label { color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .price-box .amount { color: var(--gold); font-size: 44px; font-weight: 900; line-height: 1; margin: 4px 0; }
+  .price-box .sub { color: #888; font-size: 12px; }
+
+  .breakdown-row { display: flex; justify-content: space-between; padding: 7px 12px; border-radius: 6px; font-size: 13px; }
+  .breakdown-row:nth-child(odd) { background: var(--gray); }
+  .breakdown-row .label { color: var(--text-light); }
+  .breakdown-row .val { font-weight: 600; color: var(--dark); }
+
+  /* PAINTER PAY */
+  .painter-pay-box { background: #f0fff4; border: 1.5px solid #a8e6bf; border-radius: 10px; padding: 14px; }
+  .painter-pay-box .title { font-weight: 700; font-size: 13px; color: var(--green); margin-bottom: 10px; }
+
+  /* ROOMS SUMMARY */
+  .rooms-summary { background: var(--gray); border-radius: 8px; padding: 12px; margin-top: 12px; }
+  .rooms-summary-row { display: flex; justify-content: space-between; font-size: 13px; padding: 3px 0; }
+  .rooms-summary-row .surface { color: var(--text-light); }
+  .rooms-summary-row .sf { font-weight: 600; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 30px 20px; color: var(--text-light); }
+  .empty-state .icon { font-size: 36px; margin-bottom: 8px; }
+  .empty-state p { font-size: 14px; }
+
+  /* PAINTERS ROW */
+  .painters-row { display: flex; gap: 8px; align-items: center; }
+  .painter-btn { width: 40px; height: 40px; border-radius: 8px; border: 1.5px solid var(--gray2); background: var(--white); font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-weight: 700; color: var(--dark2); transition: all 0.2s; }
+  .painter-btn:hover { border-color: var(--gold); background: #FFF8E8; }
+  .painter-count { font-size: 24px; font-weight: 900; color: var(--dark); min-width: 40px; text-align: center; }
+
+  /* STICKY FOOTER */
+  .sticky-bar { position: fixed; bottom: 0; left: 0; right: 0; background: var(--white); border-top: 1px solid var(--gray2); padding: 12px 16px; display: flex; gap: 10px; z-index: 100; box-shadow: 0 -4px 20px rgba(0,0,0,0.08); }
+  .sticky-bar .price-preview { flex: 1; display: flex; flex-direction: column; justify-content: center; }
+  .sticky-bar .price-preview .label { font-size: 11px; color: var(--text-light); }
+  .sticky-bar .price-preview .amount { font-size: 22px; font-weight: 900; color: var(--dark); }
+
+  /* TABS NAV */
+  .tabs-nav { display: flex; background: var(--gray); border-radius: 10px; padding: 4px; margin-bottom: 16px; }
+  .tabs-nav button { flex: 1; padding: 9px; border: none; background: transparent; border-radius: 7px; font-weight: 600; font-size: 13px; color: var(--text-light); cursor: pointer; transition: all 0.2s; }
+  .tabs-nav button.active { background: var(--white); color: var(--dark); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
+  /* CHIP COATS */
+  .coats-selector { display: flex; gap: 6px; }
+  .coat-btn { flex: 1; padding: 8px; border: 1.5px solid var(--gray2); border-radius: 8px; text-align: center; cursor: pointer; font-size: 13px; font-weight: 600; color: var(--text-light); transition: all 0.2s; background: var(--white); }
+  .coat-btn.active { border-color: var(--gold); background: #FFF8E8; color: var(--dark); }
+
+  @media (max-width: 400px) {
+    .form-grid { grid-template-columns: 1fr; }
+    .form-grid.thirds { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
+  </div>
+  <div class="badge">Estimator v1.3</div>
+</header>
+
+<main>
+  <!-- TABS NAV -->
+  <div class="tabs-nav">
+    <button class="active" onclick="showTab('estimate')">📋 New Estimate</button>
+    <button onclick="showTab('results')">📊 Results</button>
+  </div>
+
+  <!-- ==================== TAB: ESTIMATE ==================== -->
+  <div class="tab-content active" id="tab-estimate">
+
+    <!-- CLIENT INFO -->
+    <div class="card">
+      <div class="card-header"><span class="icon">👤</span> Client Info</div>
+      <div class="card-body">
+        <div class="form-grid full" style="margin-bottom:12px">
+          <div class="field">
+            <label>Client Name</label>
+            <input type="text" id="clientName" placeholder="John Smith" oninput="updatePreview()">
+          </div>
+        </div>
+        <div class="form-grid">
+          <div class="field">
+            <label>Phone</label>
+            <input type="tel" id="clientPhone" placeholder="(312) 000-0000">
+          </div>
+          <div class="field">
+            <label>Date</label>
+            <input type="date" id="estDate">
+          </div>
+        </div>
+        <div class="form-grid full" style="margin-top:12px">
+          <div class="field">
+            <label>Address</label>
+            <input type="text" id="clientAddress" placeholder="123 Main St, Chicago IL">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- JOB TYPE -->
+    <div class="card">
+      <div class="card-header"><span class="icon">🏠</span> Job Type</div>
+      <div class="card-body">
+        <div class="job-tabs">
+          <div class="job-tab active" onclick="setJobType('interior', this)">
+            <span class="tab-icon">🛋️</span>Interior
+          </div>
+          <div class="job-tab" onclick="setJobType('exterior', this)">
+            <span class="tab-icon">🏡</span>Exterior
+          </div>
+          <div class="job-tab" onclick="setJobType('cabinets', this)">
+            <span class="tab-icon">🗄️</span>Cabinets
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ROOMS (Interior) -->
+    <div id="section-interior">
+      <div class="card">
+        <div class="card-header"><span class="icon">📐</span> Rooms & Measurements</div>
+        <div class="card-body">
+          <div id="rooms-container">
+            <div class="empty-state">
+              <div class="icon">🏠</div>
+              <p>No rooms added yet.<br>Tap below to add your first room.</p>
+            </div>
+          </div>
+          <div id="rooms-summary" style="display:none" class="rooms-summary"></div>
+        </div>
+        <div style="padding: 0 18px 18px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="addRoom('Living Room')">+ Living Room</button>
+          <button class="btn btn-outline btn-sm" onclick="addRoom('Bedroom')">+ Bedroom</button>
+          <button class="btn btn-outline btn-sm" onclick="addRoom('Kitchen')">+ Kitchen</button>
+          <button class="btn btn-outline btn-sm" onclick="addRoom('Bathroom')">+ Bathroom</button>
+          <button class="btn btn-outline btn-sm" onclick="addRoom('Hallway')">+ Hallway</button>
+          <button class="btn btn-outline btn-sm" onclick="addRoom('Other')">+ Other</button>
+        </div>
+      </div>
+
+      <!-- PAINT SELECTION -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🎨</span> Paint Selection</div>
+        <div class="card-body">
+          <div class="section-label">Walls Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="paintWalls" onchange="calculate()">
+              <option value="31.95|ProMar 200 Zero VOC">ProMar 200 Zero VOC — $31.95/gal</option>
+              <option value="38.95|Cashmere Interior">Cashmere Interior — $38.95/gal</option>
+              <option value="47.95|Duration Home">Duration Home — $47.95/gal</option>
+              <option value="56.45|Emerald Interior">Emerald Interior — $56.45/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Ceiling Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="paintCeiling" onchange="calculate()">
+              <option value="25.95|ProMar Ceiling">ProMar Ceiling Paint — $25.95/gal</option>
+              <option value="36.45|Premium Ceiling">Premium Ceiling Paint — $36.45/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Trim & Doors Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="paintTrim" onchange="calculate()">
+              <option value="49.95|ProClassic Enamel">ProClassic Waterborne Enamel — $49.95/gal</option>
+              <option value="61.95|Emerald Urethane Trim">Emerald Urethane Trim — $61.95/gal</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+          <div class="divider"></div>
+          <div class="section-label">Paint Markup</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Markup sobre materiales</div>
+              <div style="font-size:11px;color:var(--text-light);">Cubre pickup, desperdicio, manejo</div>
+            </div>
+            <div class="markup-val" id="markupDisplay">15%</div>
+          </div>
+          <input type="range" id="markupSlider" min="0" max="30" value="15" oninput="updateMarkup()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>15%</span><span>20%</span><span>30%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Primer (if needed)</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="usePrimer" onchange="calculate()" style="width:18px;height:18px;accent-color:var(--gold)">
+              Include primer coat
+            </label>
+          </div>
+          <div id="primer-options" style="display:none">
+            <div class="field">
+              <select id="paintPrimer" onchange="calculate()">
+                <option value="30.95|Extreme Block Primer">Extreme Block Primer — $30.95/gal</option>
+                <option value="38.45|Multi-Purpose Primer">Multi-Purpose Primer — $38.45/gal</option>
+                <option value="55.45|White Shellac Primer">White Pigmented Shellac — $55.45/gal</option>
+                <option value="61.95|Extreme Bond Primer">Extreme Bond Primer — $61.95/gal</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINTERS & COATS -->
+      <div class="card">
+        <div class="card-header"><span class="icon">👷</span> Job Settings</div>
+        <div class="card-body">
+          <div class="section-label">Job Complexity</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="complexitySelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setComplexity(1.75, this)">
+              🏠 Simple<br><span style="font-size:10px;color:var(--text-light)">8ft ceilings</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setComplexity(2.25, this)">
+              🏢 Medium<br><span style="font-size:10px;color:var(--text-light)">9-10ft / detalles</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setComplexity(4.0, this)">
+              🏗️ High/Stairs<br><span style="font-size:10px;color:var(--text-light)">12ft+ / escaleras</span>
+            </div>
+          </div>
+
+          <div class="section-label">Number of Painters</div>
+          <div class="painters-row" style="margin-bottom:18px">
+            <button class="painter-btn" onclick="changePainters(-1)">−</button>
+            <div class="painter-count" id="paintersCount">1</div>
+            <button class="painter-btn" onclick="changePainters(1)">+</button>
+            <div style="font-size:13px; color:var(--text-light); margin-left:6px;">@ $30.00/hr each</div>
+          </div>
+
+          <div class="section-label">Number of Coats — Walls & Ceiling</div>
+          <div class="coats-selector" style="margin-bottom:18px" id="coatsSelector">
+            <div class="coat-btn active" onclick="setCoats(1, this)">1 Coat</div>
+            <div class="coat-btn" onclick="setCoats(2, this)">2 Coats</div>
+            <div class="coat-btn" onclick="setCoats(3, this)">3 Coats</div>
+          </div>
+
+          <div class="section-label">Overhead % del precio</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Cubre operaciones del negocio</div>
+              <div style="font-size:11px;color:var(--text-light);">Se calcula sobre el precio final del job</div>
+            </div>
+            <div class="markup-val" id="overheadPctDisplay" style="color:var(--dark3)">15%</div>
+          </div>
+          <input type="range" id="overheadSlider" min="10" max="25" value="15" oninput="updateOverheadPct()">
+          <div class="margin-labels"><span>10%</span><span>13%</span><span>15%</span><span>20%</span><span>25%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Desired Profit Margin</div>
+          <div class="margin-display">
+            <span id="marginDisplay">35%</span>
+            <span>profit margin</span>
+          </div>
+          <input type="range" id="marginSlider" min="20" max="60" value="35" oninput="updateMargin()">
+          <div class="margin-labels">
+            <span>20%</span><span>30%</span><span>40%</span><span>50%</span><span>60%</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold btn-full" style="font-size:16px; padding:16px;" onclick="showResults()">
+        Calculate Estimate →
+      </button>
+    </div>
+
+    <!-- EXTERIOR (placeholder) -->
+    <div id="section-exterior" style="display:none">
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="icon">🏡</div>
+            <p><strong>Exterior coming in v2</strong><br>Switch to Interior for now.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CABINETS (placeholder) -->
+    <div id="section-cabinets" style="display:none">
+      <div class="card">
+        <div class="card-body">
+          <div class="empty-state">
+            <div class="icon">🗄️</div>
+            <p><strong>Cabinets coming in v2</strong><br>Switch to Interior for now.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /tab-estimate -->
+
+
+  <!-- ==================== TAB: RESULTS ==================== -->
+  <div class="tab-content" id="tab-results">
+
+    <div id="results-empty" class="card">
+      <div class="card-body">
+        <div class="empty-state">
+          <div class="icon">📊</div>
+          <p>No estimate calculated yet.<br>Go to <strong>New Estimate</strong> and tap Calculate.</p>
+        </div>
+      </div>
+    </div>
+
+    <div id="results-content" style="display:none">
+
+      <!-- PRICE BOX -->
+      <div class="price-box">
+        <div class="label">Estimated Quote for Client</div>
+        <div class="amount" id="r-price">$0</div>
+        <div class="sub" id="r-client-sub">Client Name — Address</div>
+      </div>
+
+      <!-- SUMMARY CARD -->
+      <div class="card">
+        <div class="card-header"><span class="icon">📐</span> Surface Summary</div>
+        <div class="card-body" id="r-surfaces"></div>
+      </div>
+
+      <!-- LABOR CARD -->
+      <div class="card">
+        <div class="card-header"><span class="icon">⏱️</span> Labor</div>
+        <div class="card-body">
+          <div id="r-labor"></div>
+          <div class="divider"></div>
+          <div id="r-painter-pay" class="painter-pay-box"></div>
+        </div>
+      </div>
+
+      <!-- MATERIALS CARD -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🪣</span> Materials</div>
+        <div class="card-body" id="r-materials"></div>
+      </div>
+
+      <!-- FINANCIALS CARD -->
+      <div class="card">
+        <div class="card-header"><span class="icon">💰</span> Financial Breakdown</div>
+        <div class="card-body" id="r-financials"></div>
+      </div>
+
+      <!-- ACTIONS -->
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+        <button class="btn btn-dark btn-full" onclick="window.print()">🖨️ Print / Save PDF</button>
+        <button class="btn btn-outline btn-full" onclick="showTab('estimate')">← Edit Estimate</button>
+      </div>
+
+    </div>
+  </div><!-- /tab-results -->
+
+</main>
+
+<!-- STICKY BAR -->
+<div class="sticky-bar">
+  <div class="price-preview">
+    <div class="label">Quote Preview</div>
+    <div class="amount" id="preview-price">—</div>
+  </div>
+  <button class="btn btn-gold" style="white-space:nowrap" onclick="showResults()">Calculate →</button>
+</div>
+
+<script>
+// ============================================================
+// DATA & STATE
+// ============================================================
+const PAINTER_RATE = 30;   // $/hr
+let matMarkup = 0.15;      // 15% markup on materials (adjustable)
+let overheadPct = 0.15;    // 15% of job price = overhead (adjustable)
+let complexityFactor = 1.75; // multiplier over PCA base rates (Simple=1.75, Medium=2.25, High/Stairs=4.0)
+
+// PCA Production Rates (SF/HR) — mid-range values
+const RATES = {
+  walls_roll_1st:  337,
+  walls_roll_add:  375,
+  ceil_roll_1st:   325,
+  ceil_roll_add:   375,
+  trim_brush_1st:   75,
+  trim_brush_add:  100,
+  door_flush_1st:  150,
+  door_flush_add:  200,
+  setup_factor:   0.18,   // 18% buffer for setup, masking, cleanup
+};
+
+// Paint coverage (SF per gallon)
+const COVERAGE = {
+  walls: 400,
+  ceiling: 400,
+  trim: 350,
+  primer: 350,
+};
+
+let rooms = [];
+let roomCounter = 0;
+let numPainters = 1;
+let numCoats = 1;
+let jobType = 'interior';
+let lastResult = null;
+
+// ============================================================
+// INIT
+// ============================================================
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('estDate').value = new Date().toISOString().split('T')[0];
+  document.getElementById('usePrimer').addEventListener('change', function() {
+    document.getElementById('primer-options').style.display = this.checked ? 'block' : 'none';
+    calculate();
+  });
+});
+
+// ============================================================
+// TABS
+// ============================================================
+function showTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tabs-nav button').forEach(el => el.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  document.querySelectorAll('.tabs-nav button')[tab === 'estimate' ? 0 : 1].classList.add('active');
+  if (tab === 'results') renderResults();
+}
+
+// ============================================================
+// JOB TYPE
+// ============================================================
+function setJobType(type, el) {
+  jobType = type;
+  document.querySelectorAll('.job-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('section-interior').style.display = type === 'interior' ? 'block' : 'none';
+  document.getElementById('section-exterior').style.display = type === 'exterior' ? 'block' : 'none';
+  document.getElementById('section-cabinets').style.display = type === 'cabinets' ? 'block' : 'none';
+}
+
+// ============================================================
+// PAINTERS & COATS
+// ============================================================
+function changePainters(delta) {
+  numPainters = Math.max(1, Math.min(10, numPainters + delta));
+  document.getElementById('paintersCount').textContent = numPainters;
+  calculate();
+}
+
+function setCoats(n, el) {
+  numCoats = n;
+  document.querySelectorAll('#coatsSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function setComplexity(factor, el) {
+  complexityFactor = factor;
+  document.querySelectorAll('#complexitySelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function updateMargin() {
+  const v = document.getElementById('marginSlider').value;
+  document.getElementById('marginDisplay').textContent = v + '%';
+  calculate();
+}
+
+function updateMarkup() {
+  const v = document.getElementById('markupSlider').value;
+  matMarkup = parseInt(v) / 100;
+  document.getElementById('markupDisplay').textContent = v + '%';
+  calculate();
+}
+
+function updateOverheadPct() {
+  const v = document.getElementById('overheadSlider').value;
+  overheadPct = parseInt(v) / 100;
+  document.getElementById('overheadPctDisplay').textContent = v + '%';
+  calculate();
+}
+
+// ============================================================
+// ROOMS
+// ============================================================
+function addRoom(defaultName) {
+  const id = ++roomCounter;
+  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim'] };
+  rooms.push(room);
+  renderRooms();
+  // auto-open new room
+  setTimeout(() => toggleRoom(id), 50);
+}
+
+function removeRoom(id) {
+  rooms = rooms.filter(r => r.id !== id);
+  renderRooms();
+  calculate();
+}
+
+function toggleRoom(id) {
+  const body = document.getElementById('room-body-' + id);
+  const toggle = document.getElementById('room-toggle-' + id);
+  if (body) {
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+  }
+}
+
+function getRoomData(id) {
+  return rooms.find(r => r.id === id);
+}
+
+function updateRoomField(id, field, value) {
+  const room = getRoomData(id);
+  if (room) {
+    room[field] = field === 'name' ? value : (parseFloat(value) || 0);
+    // Update room header
+    const nameEl = document.getElementById('room-name-' + id);
+    if (nameEl && field === 'name') nameEl.textContent = value || 'Room';
+    updateRoomSF(id);
+    calculate();
+  }
+}
+
+function toggleSurface(id, surface, el) {
+  const room = getRoomData(id);
+  if (!room) return;
+  const idx = room.surfaces.indexOf(surface);
+  if (idx > -1) {
+    room.surfaces.splice(idx, 1);
+    el.classList.remove('checked');
+  } else {
+    room.surfaces.push(surface);
+    el.classList.add('checked');
+  }
+  updateRoomSF(id);
+  calculate();
+}
+
+function updateRoomSF(id) {
+  const room = getRoomData(id);
+  if (!room) return;
+  const sf = calcRoomSF(room);
+  const el = document.getElementById('room-sf-' + id);
+  if (el) el.textContent = sf.total > 0 ? sf.total.toFixed(0) + ' SF' : '';
+}
+
+function calcRoomSF(room) {
+  const l = parseFloat(room.l) || 0;
+  const w = parseFloat(room.w) || 0;
+  const h = parseFloat(room.h) || 0;
+  const doorsFlush = parseInt(room.doors_flush) || 0;
+  const doorsPanel = parseInt(room.doors_panel) || 0;
+  const totalDoors = doorsFlush + doorsPanel;
+
+  // Wall SF: perimeter × height, minus door openings (21 SF each)
+  const perimeter = 2 * (l + w);
+  let wallSF = perimeter * h;
+  wallSF -= totalDoors * 21; // deduct door openings
+  wallSF = Math.max(0, wallSF);
+
+  // Ceiling SF
+  const ceilSF = l * w;
+
+  // Trim SF: base molding (perimeter × ~0.33 SF/LF) + door frames (34 SF each) + window frames (~18 SF each)
+  const trimSF = (perimeter * 0.33) + (totalDoors * 34) + ((parseInt(room.windows) || 0) * 18);
+
+  let total = 0;
+  if (room.surfaces.includes('walls')) total += wallSF;
+  if (room.surfaces.includes('ceiling')) total += ceilSF;
+  if (room.surfaces.includes('trim')) total += trimSF;
+
+  return { walls: wallSF, ceiling: ceilSF, trim: trimSF, total, doorsFlush, doorsPanel };
+}
+
+function renderRooms() {
+  const container = document.getElementById('rooms-container');
+  if (rooms.length === 0) {
+    container.innerHTML = `<div class="empty-state"><div class="icon">🏠</div><p>No rooms added yet.<br>Tap below to add your first room.</p></div>`;
+    document.getElementById('rooms-summary').style.display = 'none';
+    return;
+  }
+
+  container.innerHTML = rooms.map(room => `
+    <div class="room-card">
+      <div class="room-header" onclick="toggleRoom(${room.id})">
+        <div>
+          <div class="room-name" id="room-name-${room.id}">${room.name}</div>
+          <div class="room-sf" id="room-sf-${room.id}"></div>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeRoom(${room.id})">✕</button>
+          <div class="room-toggle" id="room-toggle-${room.id}">▾</div>
+        </div>
+      </div>
+      <div class="room-body" id="room-body-${room.id}">
+        <div class="form-grid full" style="margin-bottom:12px">
+          <div class="field">
+            <label>Room Name</label>
+            <input type="text" value="${room.name}" onchange="updateRoomField(${room.id}, 'name', this.value)" placeholder="e.g. Master Bedroom">
+          </div>
+        </div>
+        <div class="section-label">Dimensions (feet)</div>
+        <div class="form-grid thirds" style="margin-bottom:14px">
+          <div class="field">
+            <label>Length</label>
+            <input type="number" value="${room.l}" placeholder="12" onchange="updateRoomField(${room.id}, 'l', this.value)">
+          </div>
+          <div class="field">
+            <label>Width</label>
+            <input type="number" value="${room.w}" placeholder="10" onchange="updateRoomField(${room.id}, 'w', this.value)">
+          </div>
+          <div class="field">
+            <label>Height</label>
+            <input type="number" value="${room.h}" placeholder="9" onchange="updateRoomField(${room.id}, 'h', this.value)">
+          </div>
+        </div>
+        <div class="section-label">Surfaces to Paint</div>
+        <div class="surfaces-grid">
+          <div class="surface-chip ${room.surfaces.includes('walls')?'checked':''}" onclick="toggleSurface(${room.id}, 'walls', this)">🧱 Walls</div>
+          <div class="surface-chip ${room.surfaces.includes('ceiling')?'checked':''}" onclick="toggleSurface(${room.id}, 'ceiling', this)">⬜ Ceiling</div>
+          <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">🪟 Trim & Doors</div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">Openings</div>
+        <div class="form-grid thirds">
+          <div class="field">
+            <label>Flush Doors</label>
+            <input type="number" value="${room.doors_flush}" onchange="updateRoomField(${room.id}, 'doors_flush', this.value)" min="0">
+          </div>
+          <div class="field">
+            <label>Panel Doors</label>
+            <input type="number" value="${room.doors_panel}" onchange="updateRoomField(${room.id}, 'doors_panel', this.value)" min="0">
+          </div>
+          <div class="field">
+            <label>Windows</label>
+            <input type="number" value="${room.windows}" onchange="updateRoomField(${room.id}, 'windows', this.value)" min="0">
+          </div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// CALCULATE
+// ============================================================
+function calculate() {
+  if (rooms.length === 0) {
+    document.getElementById('preview-price').textContent = '—';
+    return;
+  }
+
+  // Aggregate SF across rooms
+  let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0;
+  let totalFlushDoors = 0, totalPanelDoors = 0;
+
+  rooms.forEach(room => {
+    const sf = calcRoomSF(room);
+    if (room.surfaces.includes('walls')) totalWallSF += sf.walls;
+    if (room.surfaces.includes('ceiling')) totalCeilSF += sf.ceiling;
+    if (room.surfaces.includes('trim')) {
+      totalTrimSF += sf.trim;
+      totalFlushDoors += sf.doorsFlush;
+      totalPanelDoors += sf.doorsPanel;
+    }
+  });
+
+  const hasPrimer = document.getElementById('usePrimer').checked;
+
+  // --- HOURS ---
+  let wallHours = 0, ceilHours = 0, trimHours = 0;
+
+  if (totalWallSF > 0) {
+    wallHours += totalWallSF / RATES.walls_roll_1st;
+    if (numCoats > 1) wallHours += totalWallSF * (numCoats - 1) / RATES.walls_roll_add;
+    if (hasPrimer) wallHours += totalWallSF / RATES.walls_roll_1st;
+  }
+  if (totalCeilSF > 0) {
+    ceilHours += totalCeilSF / RATES.ceil_roll_1st;
+    if (numCoats > 1) ceilHours += totalCeilSF * (numCoats - 1) / RATES.ceil_roll_add;
+    if (hasPrimer) ceilHours += totalCeilSF / RATES.ceil_roll_1st;
+  }
+  if (totalTrimSF > 0) {
+    // Trim (base molding area)
+    const baseArea = totalTrimSF - (totalFlushDoors * 34) - (rooms.reduce((a,r)=>a+(parseInt(r.windows)||0),0)*18);
+    const doorArea = totalFlushDoors * 34 + totalPanelDoors * 34;
+    const trimOnlyHours = Math.max(0, baseArea) / RATES.trim_brush_1st * numCoats;
+    const doorHours = totalFlushDoors * 34 / RATES.door_flush_1st * numCoats +
+                      totalPanelDoors * 34 / (RATES.door_flush_1st * 0.75) * numCoats;
+    trimHours = trimOnlyHours + doorHours;
+  }
+
+  const productionHours = (wallHours + ceilHours + trimHours) * complexityFactor;
+  const setupHours = productionHours * RATES.setup_factor;
+  const totalHours = productionHours + setupHours;
+  const laborCost = totalHours * PAINTER_RATE;
+
+  // Job duration
+  const hoursPerDay = 8 * numPainters;
+  const jobDays = Math.ceil(totalHours / hoursPerDay);
+
+  // --- MATERIALS ---
+  const [wallPrice, wallName] = document.getElementById('paintWalls').value.split('|');
+  const [ceilPrice, ceilName] = document.getElementById('paintCeiling').value.split('|');
+  const [trimPrice, trimName] = document.getElementById('paintTrim').value.split('|');
+  const [primerPrice, primerName] = hasPrimer ? document.getElementById('paintPrimer').value.split('|') : [0, ''];
+
+  const wallGals = Math.ceil(totalWallSF * numCoats / COVERAGE.walls * 1.10);
+  const ceilGals = Math.ceil(totalCeilSF * numCoats / COVERAGE.ceiling * 1.10);
+  const trimGals = Math.ceil(totalTrimSF * numCoats / COVERAGE.trim * 1.10);
+  const primerGals = hasPrimer ? Math.ceil((totalWallSF + totalCeilSF) / COVERAGE.primer * 1.10) : 0;
+
+  const wallMatCost = wallGals * parseFloat(wallPrice);
+  const ceilMatCost = ceilGals * parseFloat(ceilPrice);
+  const trimMatCost = trimGals * parseFloat(trimPrice);
+  const primerMatCost = primerGals * parseFloat(primerPrice);
+  const totalMatBase = wallMatCost + ceilMatCost + trimMatCost + primerMatCost;
+  const totalMatMarkup = totalMatBase * matMarkup;
+  const hdSupplies = totalMatBase * 0.45; // tape, plastic, caulk, sandpaper ~45% of SW paint cost
+  const totalMaterials = totalMatBase + totalMatMarkup + hdSupplies;
+
+  // --- TOTALS ---
+  // overhead is a % of the final price, so we solve:
+  // price = (labor + materials) / (1 - margin - overheadPct)
+  const margin = parseInt(document.getElementById('marginSlider').value) / 100;
+  const directCost = laborCost + totalMaterials;
+  const price = directCost / (1 - margin - overheadPct);
+  const overheadAmt = price * overheadPct;
+  const totalCost = directCost + overheadAmt;
+  const profit = price - totalCost;
+
+  // Update preview
+  document.getElementById('preview-price').textContent = '$' + price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  // Store result
+  lastResult = {
+    totalWallSF, totalCeilSF, totalTrimSF,
+    wallHours, ceilHours, trimHours, productionHours, setupHours, totalHours,
+    laborCost, jobDays,
+    wallGals, wallName, wallPrice: parseFloat(wallPrice), wallMatCost,
+    ceilGals, ceilName, ceilPrice: parseFloat(ceilPrice), ceilMatCost,
+    trimGals, trimName, trimPrice: parseFloat(trimPrice), trimMatCost,
+    primerGals, primerName, primerPrice: parseFloat(primerPrice), primerMatCost,
+    hasPrimer,
+    totalMatBase, totalMatMarkup, hdSupplies, totalMaterials,
+    directCost, overheadAmt, overheadPct,
+    totalCost, price, profit, margin,
+    matMarkupPct: matMarkup,
+    numPainters, numCoats, complexityFactor,
+  };
+
+  updateRoomsSummary();
+  return lastResult;
+}
+
+function updateRoomsSummary() {
+  if (rooms.length === 0) return;
+  const summary = document.getElementById('rooms-summary');
+  let totalSF = 0;
+  rooms.forEach(r => { totalSF += calcRoomSF(r).total; });
+  summary.style.display = 'block';
+  summary.innerHTML = `<div style="font-size:12px; font-weight:700; color:var(--text-light); margin-bottom:6px; text-transform:uppercase;">Total SF Overview</div>` +
+    rooms.map(r => {
+      const sf = calcRoomSF(r);
+      return `<div class="rooms-summary-row"><span class="surface">${r.name}</span><span class="sf">${sf.total.toFixed(0)} SF</span></div>`;
+    }).join('') +
+    `<div class="rooms-summary-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span style="font-weight:700">Total</span><span class="sf" style="color:var(--gold);font-size:15px">${totalSF.toFixed(0)} SF</span></div>`;
+}
+
+function updatePreview() { calculate(); }
+
+// ============================================================
+// RESULTS
+// ============================================================
+function showResults() {
+  calculate();
+  showTab('results');
+}
+
+function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+function fmtN(n) { return n.toFixed(1); }
+
+function renderResults() {
+  if (!lastResult) { calculate(); }
+  if (!lastResult) return;
+
+  document.getElementById('results-empty').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  const r = lastResult;
+  const clientName = document.getElementById('clientName').value || 'Client';
+  const address = document.getElementById('clientAddress').value || '';
+  const date = document.getElementById('estDate').value;
+
+  // Price box
+  document.getElementById('r-price').textContent = '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('r-client-sub').textContent = `${clientName}${address ? ' — ' + address : ''} | ${date}`;
+
+  // Surfaces
+  let surfHTML = '';
+  if (r.totalWallSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🧱 Walls (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalWallSF.toFixed(0)} SF</span></div>`;
+  if (r.totalCeilSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">⬜ Ceiling (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalCeilSF.toFixed(0)} SF</span></div>`;
+  if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Trim & Doors (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
+  if (r.hasPrimer) surfHTML += `<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (1 coat)</span><span class="val">${(r.totalWallSF+r.totalCeilSF).toFixed(0)} SF</span></div>`;
+  document.getElementById('r-surfaces').innerHTML = surfHTML;
+
+  // Labor
+  const hoursPerPainter = r.totalHours / r.numPainters;
+  const complexityLabel = r.complexityFactor === 1.75 ? '🏠 Simple' : r.complexityFactor === 2.25 ? '🏢 Medium' : r.complexityFactor === 4.0 ? '🏗️ High/Stairs' : '🏗️ High/Stairs';
+  document.getElementById('r-labor').innerHTML = `
+    <div class="breakdown-row" style="background:#fff8e8"><span class="label">Complexity factor</span><span class="val" style="color:var(--gold)">${complexityLabel} (×${r.complexityFactor})</span></div>
+    <div class="breakdown-row"><span class="label">Production hours (adj.)</span><span class="val">${fmtN(r.productionHours)} hrs</span></div>
+    <div class="breakdown-row"><span class="label">Setup & cleanup (18%)</span><span class="val">${fmtN(r.setupHours)} hrs</span></div>
+    <div class="breakdown-row"><span class="label">Total hours on job</span><span class="val">${fmtN(r.totalHours)} hrs</span></div>
+    <div class="breakdown-row"><span class="label">Job duration (${r.numPainters} painter${r.numPainters>1?'s':''})</span><span class="val">${r.jobDays} day${r.jobDays>1?'s':''}</span></div>
+    <div class="breakdown-row"><span class="label">Labor cost @ $30/hr</span><span class="val" style="color:var(--dark)">${fmt(r.laborCost)}</span></div>
+  `;
+
+  // Painter pay
+  const payPerPainter = hoursPerPainter * PAINTER_RATE;
+  let painterHTML = `<div class="title">💵 Painter Pay Breakdown</div>`;
+  for (let i = 1; i <= r.numPainters; i++) {
+    painterHTML += `<div class="breakdown-row"><span class="label">Painter ${i}</span><span class="val" style="color:var(--green)">${fmtN(hoursPerPainter)} hrs × $30 = ${fmt(payPerPainter)}</span></div>`;
+  }
+  painterHTML += `<div class="breakdown-row" style="border-top:1px solid #a8e6bf; margin-top:4px; padding-top:8px;"><span class="label" style="font-weight:700">Total Painter Pay</span><span class="val" style="color:var(--green); font-size:15px">${fmt(r.laborCost)}</span></div>`;
+  document.getElementById('r-painter-pay').innerHTML = painterHTML;
+
+  // Materials
+  let matHTML = '';
+  if (r.hasPrimer) matHTML += `<div class="breakdown-row" style="background:#fff8e8"><span class="label">${r.primerName} (primer)</span><span class="val">${r.primerGals} gal — ${fmt(r.primerMatCost)}</span></div>`;
+  if (r.totalWallSF > 0) matHTML += `<div class="breakdown-row"><span class="label">${r.wallName}</span><span class="val">${r.wallGals} gal — ${fmt(r.wallMatCost)}</span></div>`;
+  if (r.totalCeilSF > 0) matHTML += `<div class="breakdown-row"><span class="label">${r.ceilName}</span><span class="val">${r.ceilGals} gal — ${fmt(r.ceilMatCost)}</span></div>`;
+  if (r.totalTrimSF > 0) matHTML += `<div class="breakdown-row"><span class="label">${r.trimName}</span><span class="val">${r.trimGals} gal — ${fmt(r.trimMatCost)}</span></div>`;
+  matHTML += `<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:8px;"><span class="label">Subtotal SW Paint</span><span class="val">${fmt(r.totalMatBase)}</span></div>`;
+  matHTML += `<div class="breakdown-row" style="background:#f0fff4"><span class="label" style="color:var(--green)">+ Markup ${Math.round(r.matMarkupPct*100)}%</span><span class="val" style="color:var(--green)">${fmt(r.totalMatMarkup)}</span></div>`;
+  matHTML += `<div class="breakdown-row"><span class="label">🏪 HD Supplies <small style="color:var(--text-light)">tape, plastic, caulk, sandpaper</small></span><span class="val">${fmt(r.hdSupplies)}</span></div>`;
+  matHTML += `<div class="breakdown-row" style="border-top:2px solid var(--gold);margin-top:2px;padding-top:8px;"><span class="label" style="font-weight:700">Total Materiales</span><span class="val" style="color:var(--dark);font-size:15px">${fmt(r.totalMaterials)}</span></div>`;
+  document.getElementById('r-materials').innerHTML = matHTML;
+
+  // Financials
+  document.getElementById('r-financials').innerHTML = `
+    <div class="result-row">
+      <div class="result-label">Labor Cost</div>
+      <div class="result-value">${fmt(r.laborCost)}</div>
+    </div>
+    <div class="result-row">
+      <div class="result-label">SW Paint</div>
+      <div class="result-value">${fmt(r.totalMatBase)}</div>
+    </div>
+    <div class="result-row" style="background:#f0fff4;border-radius:6px;padding:10px 8px;">
+      <div class="result-label">↳ Markup materiales <small>${Math.round(r.matMarkupPct*100)}% — pickup, manejo, desperdicio</small></div>
+      <div class="result-value green">+ ${fmt(r.totalMatMarkup)}</div>
+    </div>
+    <div class="result-row">
+      <div class="result-label">HD Supplies <small>tape, plastic, caulk, sandpaper</small></div>
+      <div class="result-value">${fmt(r.hdSupplies)}</div>
+    </div>
+    <div class="result-row">
+      <div class="result-label">Overhead ${Math.round(r.overheadPct*100)}% del job<small>Operaciones — escala con el tamaño del job</small></div>
+      <div class="result-value">${fmt(r.overheadAmt)}</div>
+    </div>
+    <div class="result-row">
+      <div class="result-label"><strong>Total Cost</strong></div>
+      <div class="result-value">${fmt(r.totalCost)}</div>
+    </div>
+    <div class="result-row">
+      <div class="result-label">Profit (${Math.round(r.margin*100)}% margin)</div>
+      <div class="result-value green">${fmt(r.profit)}</div>
+    </div>
+    <div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;">
+      <div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div>
+      <div class="result-value gold">${'$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',')}</div>
+    </div>
+    <div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">
+      ⚡ Cost per SF: ${fmt(r.price/(r.totalWallSF+r.totalCeilSF+r.totalTrimSF||1))}/SF &nbsp;|&nbsp;
+      ⏱ ${fmtN(r.totalHours)} total hrs &nbsp;|&nbsp;
+      📅 ~${r.jobDays} day${r.jobDays>1?'s':''}
+    </div>
+  `;
+}
+
+// ============================================================
+// PRINT STYLES
+// ============================================================
+</script>
+
+<style>
+@media print {
+  header, .tabs-nav, .sticky-bar, #tab-estimate, .btn { display: none !important; }
+  #tab-results { display: block !important; }
+  body { background: white; }
+  .card { box-shadow: none; border: 1px solid #ddd; }
+}
+</style>
+
+</body>
+</html>
