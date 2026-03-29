@@ -248,6 +248,7 @@
           <button class="btn btn-outline btn-sm" onclick="addRoom('Kitchen')">+ Kitchen</button>
           <button class="btn btn-outline btn-sm" onclick="addRoom('Bathroom')">+ Bathroom</button>
           <button class="btn btn-outline btn-sm" onclick="addRoom('Hallway')">+ Hallway</button>
+          <button class="btn btn-outline btn-sm" onclick="addCloset()">🚪 + Closet</button>
           <button class="btn btn-outline btn-sm" onclick="addRoom('Other')">+ Other</button>
         </div>
       </div>
@@ -625,7 +626,15 @@ function addRoom(defaultName) {
   const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim', 'doors', 'windows'], coats: numCoats };
   rooms.push(room);
   renderRooms();
-  // auto-open new room
+  setTimeout(() => toggleRoom(id), 50);
+}
+
+function addCloset() {
+  const id = ++roomCounter;
+  const n = rooms.filter(r => r.name.startsWith('Closet')).length + 1;
+  const room = { id, name: 'Closet ' + n, l: '', w: '', h: 9, doors_flush: 0, doors_panel: 1, windows: 0, surfaces: ['walls', 'trim', 'doors'], coats: 1 };
+  rooms.push(room);
+  renderRooms();
   setTimeout(() => toggleRoom(id), 50);
 }
 
