@@ -169,7 +169,7 @@
   <div>
     <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
   </div>
-  <div class="badge">Estimator v1.4</div>
+  <div class="badge">Estimator v1.3</div>
 </header>
 
 <main>
@@ -274,7 +274,7 @@
             </select>
           </div>
 
-          <div class="section-label">Trim Paint (baseboard, window frames)</div>
+          <div class="section-label">Trim & Doors Paint</div>
           <div class="field" style="margin-bottom:14px">
             <select id="paintTrim" onchange="calculate()">
               <option value="49.95|ProClassic Enamel">ProClassic Waterborne Enamel — $49.95/gal</option>
@@ -358,20 +358,6 @@
             <div class="coat-btn active" onclick="setCoats(1, this)">1 Coat</div>
             <div class="coat-btn" onclick="setCoats(2, this)">2 Coats</div>
             <div class="coat-btn" onclick="setCoats(3, this)">3 Coats</div>
-          </div>
-
-          <div class="divider"></div>
-          <div class="section-label">Door Pricing — Flat Rate / Door</div>
-          <div style="font-size:12px;color:var(--text-light);margin-bottom:10px;">Precio por puerta (cubre labor + materiales). Ajustable por estimado.</div>
-          <div class="form-grid">
-            <div class="field">
-              <label>🚪 2-Sided (regular)</label>
-              <input type="number" id="door2SidePrice" value="125" step="5" min="0" onchange="updateDoorPrices()" style="font-size:16px;font-weight:700;color:var(--dark)">
-            </div>
-            <div class="field">
-              <label>🚪 1-Sided (closet)</label>
-              <input type="number" id="door1SidePrice" value="62.50" step="5" min="0" onchange="updateDoorPrices()" style="font-size:16px;font-weight:700;color:var(--dark)">
-            </div>
           </div>
 
           <div class="divider"></div>
@@ -509,8 +495,6 @@ let matMarkup = 0.15;      // 15% markup on materials (adjustable)
 let jobSuppliesPct = 0.10; // job supplies % of SW paint cost (tape, plastic, caulk)
 let overheadPct = 0.15;    // 15% of job price = overhead (adjustable)
 let complexityFactor = 1.75; // multiplier over PCA base rates (Simple=1.75, Medium=2.25, High/Stairs=4.0)
-let doorPrice2Side = 125;   // flat rate per door, both sides (regular interior door)
-let doorPrice1Side = 62.50; // flat rate per door, one side (closet door)
 
 // PCA Production Rates (SF/HR) — mid-range values
 const RATES = {
@@ -633,12 +617,6 @@ function updateOverheadPct() {
   calculate();
 }
 
-function updateDoorPrices() {
-  doorPrice2Side = parseFloat(document.getElementById('door2SidePrice').value) || 125;
-  doorPrice1Side = parseFloat(document.getElementById('door1SidePrice').value) || 62.50;
-  calculate();
-}
-
 // ============================================================
 // ROOMS
 // ============================================================
@@ -723,9 +701,8 @@ function calcRoomSF(room) {
   // Ceiling SF
   const ceilSF = l * w;
 
-  // Trim SF: base molding (perimeter × ~0.33 SF/LF) + window frames (~18 SF each)
-  // Door panels are priced separately as flat rate — NOT included in trim SF
-  const trimSF = (perimeter * 0.33) + ((parseInt(room.windows) || 0) * 18);
+  // Trim SF: base molding (perimeter × ~0.33 SF/LF) + door frames (34 SF each) + window frames (~18 SF each)
+  const trimSF = (perimeter * 0.33) + (totalDoors * 34) + ((parseInt(room.windows) || 0) * 18);
 
   let total = 0;
   if (room.surfaces.includes('walls')) total += wallSF;
@@ -781,7 +758,7 @@ function renderRooms() {
         <div class="surfaces-grid">
           <div class="surface-chip ${room.surfaces.includes('walls')?'checked':''}" onclick="toggleSurface(${room.id}, 'walls', this)">🧱 Walls</div>
           <div class="surface-chip ${room.surfaces.includes('ceiling')?'checked':''}" onclick="toggleSurface(${room.id}, 'ceiling', this)">⬜ Ceiling</div>
-          <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">🪟 Trim</div>
+          <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">🪟 Trim & Doors</div>
         </div>
         <div class="divider"></div>
         <div class="section-label">Coats — este cuarto</div>
@@ -794,11 +771,11 @@ function renderRooms() {
         <div class="section-label">Openings</div>
         <div class="form-grid thirds">
           <div class="field">
-            <label>🚪 Doors (2-sided)</label>
+            <label>Flush Doors</label>
             <input type="number" value="${room.doors_flush}" onchange="updateRoomField(${room.id}, 'doors_flush', this.value)" min="0">
           </div>
           <div class="field">
-            <label>🚪 Doors (1-sided)</label>
+            <label>Panel Doors</label>
             <input type="number" value="${room.doors_panel}" onchange="updateRoomField(${room.id}, 'doors_panel', this.value)" min="0">
           </div>
           <div class="field">
@@ -824,7 +801,6 @@ function calculate() {
   let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0;
   let wallCoatSF = 0, ceilCoatSF = 0, trimCoatSF = 0;
   let wallHours = 0, ceilHours = 0, trimHours = 0;
-  let totalFlushDoors = 0, totalPanelDoors = 0;
 
   rooms.forEach(room => {
     const sf = calcRoomSF(room);
@@ -844,15 +820,13 @@ function calculate() {
     if (room.surfaces.includes('trim') && sf.trim > 0) {
       totalTrimSF += sf.trim;
       trimCoatSF += sf.trim * c;
-      trimHours += sf.trim / RATES.trim_brush_1st;
-      if (c > 1) trimHours += sf.trim * (c - 1) / RATES.trim_brush_add;
+      const winSF = (parseInt(room.windows) || 0) * 18;
+      const baseArea = Math.max(0, sf.trim - (sf.doorsFlush * 34) - (sf.doorsPanel * 34) - winSF);
+      const h1 = baseArea / RATES.trim_brush_1st + sf.doorsFlush * 34 / RATES.door_flush_1st + sf.doorsPanel * 34 / (RATES.door_flush_1st * 0.75);
+      const hAdd = baseArea / RATES.trim_brush_add + sf.doorsFlush * 34 / RATES.door_flush_add + sf.doorsPanel * 34 / (RATES.door_flush_add * 0.75);
+      trimHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
     }
-    // Doors counted regardless of surface toggle — priced flat rate
-    totalFlushDoors += parseInt(room.doors_flush) || 0;
-    totalPanelDoors += parseInt(room.doors_panel) || 0;
   });
-
-  const doorRevenue = (totalFlushDoors * doorPrice2Side) + (totalPanelDoors * doorPrice1Side);
 
   const hasPrimer = document.getElementById('usePrimer').checked;
   if (hasPrimer) {
@@ -894,9 +868,8 @@ function calculate() {
   // price = (labor + materials) / (1 - margin - overheadPct)
   const margin = parseInt(document.getElementById('marginSlider').value) / 100;
   const directCost = laborCost + totalMaterials;
-  const paintPrice = directCost / (1 - margin - overheadPct);
-  const price = paintPrice + doorRevenue;
-  const overheadAmt = paintPrice * overheadPct;
+  const price = directCost / (1 - margin - overheadPct);
+  const overheadAmt = price * overheadPct;
   const totalCost = directCost + overheadAmt;
   const profit = price - totalCost;
 
@@ -914,7 +887,6 @@ function calculate() {
     primerGals, primerName, primerPrice: parseFloat(primerPrice), primerMatCost,
     hasPrimer,
     totalMatBase, totalMatMarkup, jobSupplies, jobSuppliesPct, totalMaterials,
-    totalFlushDoors, totalPanelDoors, doorRevenue, doorPrice2Side, doorPrice1Side,
     directCost, overheadAmt, overheadPct,
     grossProfit: price - directCost,
     totalCost, price, profit, margin,
@@ -973,9 +945,7 @@ function renderResults() {
   let surfHTML = '';
   if (r.totalWallSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🧱 Walls (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalWallSF.toFixed(0)} SF</span></div>`;
   if (r.totalCeilSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">⬜ Ceiling (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalCeilSF.toFixed(0)} SF</span></div>`;
-  if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Trim — base molding + windows (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
-  if (r.totalFlushDoors > 0) surfHTML += `<div class="breakdown-row" style="background:#e8f4fd"><span class="label">🚪 Doors 2-sided — ${r.totalFlushDoors} door${r.totalFlushDoors>1?'s':''} × ${fmt(r.doorPrice2Side)}</span><span class="val" style="color:#1565c0">${fmt(r.totalFlushDoors * r.doorPrice2Side)}</span></div>`;
-  if (r.totalPanelDoors > 0) surfHTML += `<div class="breakdown-row" style="background:#e8f4fd"><span class="label">🚪 Doors 1-sided — ${r.totalPanelDoors} door${r.totalPanelDoors>1?'s':''} × ${fmt(r.doorPrice1Side)}</span><span class="val" style="color:#1565c0">${fmt(r.totalPanelDoors * r.doorPrice1Side)}</span></div>`;
+  if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Trim & Doors (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
   if (r.hasPrimer) surfHTML += `<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (1 coat)</span><span class="val">${(r.totalWallSF+r.totalCeilSF).toFixed(0)} SF</span></div>`;
   document.getElementById('r-surfaces').innerHTML = surfHTML;
 
@@ -1030,10 +1000,6 @@ function renderResults() {
       <div class="result-label">Job Supplies ${Math.round(r.jobSuppliesPct*100)}% <small>tape, plastic, caulk</small></div>
       <div class="result-value">${fmt(r.jobSupplies)}</div>
     </div>` : ''}
-    ${r.doorRevenue > 0 ? `<div class="result-row" style="background:#e8f4fd;border-radius:6px;padding:10px 8px;">
-      <div class="result-label">🚪 Doors (flat rate)<small>${r.totalFlushDoors > 0 ? r.totalFlushDoors + ' × $' + r.doorPrice2Side.toFixed(0) + ' two-sided' : ''}${r.totalFlushDoors > 0 && r.totalPanelDoors > 0 ? ' + ' : ''}${r.totalPanelDoors > 0 ? r.totalPanelDoors + ' × $' + r.doorPrice1Side.toFixed(0) + ' one-sided' : ''}</small></div>
-      <div class="result-value" style="color:#1565c0">+ ${fmt(r.doorRevenue)}</div>
-    </div>` : ''}
     <div class="result-row">
       <div class="result-label">Overhead ${Math.round(r.overheadPct*100)}% del job<small>Operaciones — escala con el tamaño del job</small></div>
       <div class="result-value">${fmt(r.overheadAmt)}</div>
@@ -1043,7 +1009,7 @@ function renderResults() {
       <div class="result-value">${fmt(r.totalCost)}</div>
     </div>
     <div class="result-row" style="background:#e8f5e9;border-radius:6px;padding:10px 8px;">
-      <div class="result-label"><strong>Gross Profit</strong><small>Revenue − Labor − Materials (incl. doors)</small></div>
+      <div class="result-label"><strong>Gross Profit</strong><small>Revenue − Labor − Materials</small></div>
       <div class="result-value green">${fmt(r.grossProfit)} (${Math.round((r.grossProfit/r.price)*100)}%)</div>
     </div>
     <div class="result-row" style="background:#fff3e0;border-radius:6px;padding:10px 8px;">
