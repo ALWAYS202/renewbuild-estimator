@@ -469,9 +469,11 @@
 
       <!-- ACTIONS -->
       <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:8px;">
+        <button class="btn btn-gold btn-full" id="saveBtn" onclick="saveToSheets()" style="font-size:15px;">💾 Save to Google Sheets</button>
         <button class="btn btn-dark btn-full" onclick="window.print()">🖨️ Print / Save PDF</button>
         <button class="btn btn-outline btn-full" onclick="showTab('estimate')">← Edit Estimate</button>
       </div>
+      <div id="save-status" style="text-align:center; font-size:13px; font-weight:600; margin-top:8px; display:none;"></div>
 
     </div>
   </div><!-- /tab-results -->
@@ -950,6 +952,61 @@ function updatePreview() { calculate(); }
 function showResults() {
   calculate();
   showTab('results');
+}
+
+const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzyVJ1v8FthR7j_AcXOKCSZPKoHuL7YEFGs_Q7cnWjlncXDrwsQwMol4RU-6Hx0hnyvIA/exec';
+
+function saveToSheets() {
+  if (!lastResult) { alert('Calculate estimate first.'); return; }
+  const r = lastResult;
+  const btn = document.getElementById('saveBtn');
+  const status = document.getElementById('save-status');
+  btn.disabled = true;
+  btn.textContent = '⏳ Saving...';
+  status.style.display = 'none';
+
+  const payload = {
+    client: document.getElementById('clientName').value || '',
+    address: document.getElementById('clientAddress').value || '',
+    rooms: rooms.length,
+    totalSF: (r.totalWallSF + r.totalCeilSF + r.totalTrimSF + r.totalDoorSF + r.totalWindowSF).toFixed(0),
+    complexity: ['Simple','Medium','High/Stairs'][complexityFactor === 1.75 ? 0 : complexityFactor === 2.25 ? 1 : 2],
+    painters: r.numPainters,
+    laborHours: r.totalHours.toFixed(1),
+    laborCost: r.laborCost.toFixed(2),
+    materialCost: r.totalMaterials.toFixed(2),
+    suppliesCost: r.jobSupplies.toFixed(2),
+    overhead: r.overheadAmt.toFixed(2),
+    margin: Math.round(r.margin * 100),
+    totalPrice: r.price.toFixed(2),
+    notes: document.getElementById('estNotes') ? document.getElementById('estNotes').value : ''
+  };
+
+  fetch(SHEETS_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+  .then(() => {
+    btn.textContent = '✅ Saved!';
+    btn.style.background = 'var(--green)';
+    status.style.display = 'block';
+    status.style.color = 'var(--green)';
+    status.textContent = `Estimate for ${payload.client || 'client'} saved — $${parseFloat(payload.totalPrice).toLocaleString('en-US', {minimumFractionDigits:0, maximumFractionDigits:0})}`;
+    setTimeout(() => {
+      btn.disabled = false;
+      btn.textContent = '💾 Save to Google Sheets';
+      btn.style.background = '';
+    }, 4000);
+  })
+  .catch(err => {
+    btn.disabled = false;
+    btn.textContent = '💾 Save to Google Sheets';
+    status.style.display = 'block';
+    status.style.color = 'var(--red)';
+    status.textContent = 'Error saving. Check connection.';
+  });
 }
 
 function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
