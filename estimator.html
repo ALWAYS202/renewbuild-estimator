@@ -169,7 +169,7 @@
   <div>
     <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
   </div>
-  <div class="badge">Estimator v1.3</div>
+  <div class="badge">Estimator v1.4</div>
 </header>
 
 <main>
@@ -274,7 +274,7 @@
             </select>
           </div>
 
-          <div class="section-label">Trim & Doors Paint</div>
+          <div class="section-label">Trim / Doors / Windows Paint</div>
           <div class="field" style="margin-bottom:14px">
             <select id="paintTrim" onchange="calculate()">
               <option value="49.95|ProClassic Enamel">ProClassic Waterborne Enamel — $49.95/gal</option>
@@ -622,7 +622,7 @@ function updateOverheadPct() {
 // ============================================================
 function addRoom(defaultName) {
   const id = ++roomCounter;
-  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim'], coats: numCoats };
+  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim', 'doors', 'windows'], coats: numCoats };
   rooms.push(room);
   renderRooms();
   // auto-open new room
@@ -701,15 +701,21 @@ function calcRoomSF(room) {
   // Ceiling SF
   const ceilSF = l * w;
 
-  // Trim SF: base molding (perimeter × ~0.33 SF/LF) + door frames (34 SF each) + window frames (~18 SF each)
-  const trimSF = (perimeter * 0.33) + (totalDoors * 34) + ((parseInt(room.windows) || 0) * 18);
+  // Trim SF: baseboard only (perimeter × 0.33 LF — base molding)
+  const trimSF = perimeter * 0.33;
+  // Door SF: door panels (34 SF per door — both faces combined)
+  const doorSF = totalDoors * 34;
+  // Window SF: window casing/frames (18 SF each)
+  const windowSF = (parseInt(room.windows) || 0) * 18;
 
   let total = 0;
   if (room.surfaces.includes('walls')) total += wallSF;
   if (room.surfaces.includes('ceiling')) total += ceilSF;
   if (room.surfaces.includes('trim')) total += trimSF;
+  if (room.surfaces.includes('doors')) total += doorSF;
+  if (room.surfaces.includes('windows')) total += windowSF;
 
-  return { walls: wallSF, ceiling: ceilSF, trim: trimSF, total, doorsFlush, doorsPanel };
+  return { walls: wallSF, ceiling: ceilSF, trim: trimSF, doors: doorSF, windows: windowSF, total, doorsFlush, doorsPanel };
 }
 
 function renderRooms() {
@@ -758,7 +764,9 @@ function renderRooms() {
         <div class="surfaces-grid">
           <div class="surface-chip ${room.surfaces.includes('walls')?'checked':''}" onclick="toggleSurface(${room.id}, 'walls', this)">🧱 Walls</div>
           <div class="surface-chip ${room.surfaces.includes('ceiling')?'checked':''}" onclick="toggleSurface(${room.id}, 'ceiling', this)">⬜ Ceiling</div>
-          <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">🪟 Trim & Doors</div>
+          <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">📏 Trim</div>
+          <div class="surface-chip ${room.surfaces.includes('doors')?'checked':''}" onclick="toggleSurface(${room.id}, 'doors', this)">🚪 Doors</div>
+          <div class="surface-chip ${room.surfaces.includes('windows')?'checked':''}" onclick="toggleSurface(${room.id}, 'windows', this)">🪟 Windows</div>
         </div>
         <div class="divider"></div>
         <div class="section-label">Coats — este cuarto</div>
@@ -798,9 +806,9 @@ function calculate() {
   }
 
   // Aggregate SF and hours per room (per-room coats)
-  let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0;
-  let wallCoatSF = 0, ceilCoatSF = 0, trimCoatSF = 0;
-  let wallHours = 0, ceilHours = 0, trimHours = 0;
+  let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0, totalDoorSF = 0, totalWindowSF = 0;
+  let wallCoatSF = 0, ceilCoatSF = 0, trimCoatSF = 0, doorCoatSF = 0, windowCoatSF = 0;
+  let wallHours = 0, ceilHours = 0, trimHours = 0, doorHours = 0, windowHours = 0;
 
   rooms.forEach(room => {
     const sf = calcRoomSF(room);
@@ -820,11 +828,22 @@ function calculate() {
     if (room.surfaces.includes('trim') && sf.trim > 0) {
       totalTrimSF += sf.trim;
       trimCoatSF += sf.trim * c;
-      const winSF = (parseInt(room.windows) || 0) * 18;
-      const baseArea = Math.max(0, sf.trim - (sf.doorsFlush * 34) - (sf.doorsPanel * 34) - winSF);
-      const h1 = baseArea / RATES.trim_brush_1st + sf.doorsFlush * 34 / RATES.door_flush_1st + sf.doorsPanel * 34 / (RATES.door_flush_1st * 0.75);
-      const hAdd = baseArea / RATES.trim_brush_add + sf.doorsFlush * 34 / RATES.door_flush_add + sf.doorsPanel * 34 / (RATES.door_flush_add * 0.75);
-      trimHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
+      trimHours += sf.trim / RATES.trim_brush_1st;
+      if (c > 1) trimHours += sf.trim * (c - 1) / RATES.trim_brush_add;
+    }
+    if (room.surfaces.includes('doors') && sf.doors > 0) {
+      totalDoorSF += sf.doors;
+      doorCoatSF += sf.doors * c;
+      // Flush doors: PCA door_flush rate / Panel doors: ~25% slower (detail work)
+      const h1 = (sf.doorsFlush * 34) / RATES.door_flush_1st + (sf.doorsPanel * 34) / (RATES.door_flush_1st * 0.75);
+      const hAdd = (sf.doorsFlush * 34) / RATES.door_flush_add + (sf.doorsPanel * 34) / (RATES.door_flush_add * 0.75);
+      doorHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
+    }
+    if (room.surfaces.includes('windows') && sf.windows > 0) {
+      totalWindowSF += sf.windows;
+      windowCoatSF += sf.windows * c;
+      windowHours += sf.windows / RATES.trim_brush_1st;
+      if (c > 1) windowHours += sf.windows * (c - 1) / RATES.trim_brush_add;
     }
   });
 
@@ -834,7 +853,7 @@ function calculate() {
     ceilHours += totalCeilSF / RATES.ceil_roll_1st;
   }
 
-  const productionHours = (wallHours + ceilHours + trimHours) * complexityFactor;
+  const productionHours = (wallHours + ceilHours + trimHours + doorHours + windowHours) * complexityFactor;
   const setupHours = productionHours * RATES.setup_factor;
   const totalHours = productionHours + setupHours;
   const laborCost = totalHours * PAINTER_RATE;
@@ -851,7 +870,9 @@ function calculate() {
 
   const wallGals = Math.ceil(wallCoatSF / COVERAGE.walls * 1.10);
   const ceilGals = Math.ceil(ceilCoatSF / COVERAGE.ceiling * 1.10);
-  const trimGals = Math.ceil(trimCoatSF / COVERAGE.trim * 1.10);
+  // Trim paint covers baseboard + doors + windows (all use same enamel/trim paint)
+  const allTrimCoatSF = trimCoatSF + doorCoatSF + windowCoatSF;
+  const trimGals = Math.ceil(allTrimCoatSF / COVERAGE.trim * 1.10);
   const primerGals = hasPrimer ? Math.ceil((totalWallSF + totalCeilSF) / COVERAGE.primer * 1.10) : 0;
 
   const wallMatCost = wallGals * parseFloat(wallPrice);
@@ -878,8 +899,8 @@ function calculate() {
 
   // Store result
   lastResult = {
-    totalWallSF, totalCeilSF, totalTrimSF,
-    wallHours, ceilHours, trimHours, productionHours, setupHours, totalHours,
+    totalWallSF, totalCeilSF, totalTrimSF, totalDoorSF, totalWindowSF,
+    wallHours, ceilHours, trimHours, doorHours, windowHours, productionHours, setupHours, totalHours,
     laborCost, jobDays,
     wallGals, wallName, wallPrice: parseFloat(wallPrice), wallMatCost,
     ceilGals, ceilName, ceilPrice: parseFloat(ceilPrice), ceilMatCost,
@@ -943,9 +964,11 @@ function renderResults() {
 
   // Surfaces
   let surfHTML = '';
-  if (r.totalWallSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🧱 Walls (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalWallSF.toFixed(0)} SF</span></div>`;
-  if (r.totalCeilSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">⬜ Ceiling (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalCeilSF.toFixed(0)} SF</span></div>`;
-  if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Trim & Doors (${r.numCoats} coat${r.numCoats>1?'s':''})</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
+  if (r.totalWallSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🧱 Walls</span><span class="val">${r.totalWallSF.toFixed(0)} SF</span></div>`;
+  if (r.totalCeilSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">⬜ Ceiling</span><span class="val">${r.totalCeilSF.toFixed(0)} SF</span></div>`;
+  if (r.totalTrimSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">📏 Trim (baseboard)</span><span class="val">${r.totalTrimSF.toFixed(0)} SF</span></div>`;
+  if (r.totalDoorSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🚪 Doors</span><span class="val">${r.totalDoorSF.toFixed(0)} SF</span></div>`;
+  if (r.totalWindowSF > 0) surfHTML += `<div class="breakdown-row"><span class="label">🪟 Windows</span><span class="val">${r.totalWindowSF.toFixed(0)} SF</span></div>`;
   if (r.hasPrimer) surfHTML += `<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (1 coat)</span><span class="val">${(r.totalWallSF+r.totalCeilSF).toFixed(0)} SF</span></div>`;
   document.getElementById('r-surfaces').innerHTML = surfHTML;
 
