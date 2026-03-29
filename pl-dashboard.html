@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RenewBuild P&L Dashboard 2025</title>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #F0C84A;
+    --dark: #1a1a2e;
+    --dark2: #16213e;
+    --white: #ffffff;
+    --gray: #f5f5f5;
+    --gray2: #e0e0e0;
+    --text: #2c2c2c;
+    --text-light: #666;
+    --green: #27ae60;
+    --red: #e74c3c;
+    --orange: #e67e22;
+    --blue: #2980b9;
+    --radius: 12px;
+    --shadow: 0 4px 20px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f0f2f5; color: var(--text); }
+
+  header { background: var(--dark); padding: 16px 20px; display: flex; align-items: center; gap: 12px; }
+  header .logo { color: var(--gold); font-size: 20px; font-weight: 800; }
+  header .logo span { color: var(--white); }
+  header .badge { background: var(--gold); color: var(--dark); font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; text-transform: uppercase; }
+
+  main { max-width: 800px; margin: 0 auto; padding: 20px 16px 80px; }
+
+  .card { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); margin-bottom: 16px; overflow: hidden; }
+  .card-header { background: var(--dark2); color: var(--white); padding: 13px 18px; display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; }
+  .card-header .icon { color: var(--gold); }
+  .card-body { padding: 18px; }
+
+  /* KPI GRID */
+  .kpi-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 16px; }
+  .kpi { background: var(--white); border-radius: var(--radius); box-shadow: var(--shadow); padding: 16px; text-align: center; }
+  .kpi .label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.4px; margin-bottom: 6px; }
+  .kpi .value { font-size: 26px; font-weight: 900; }
+  .kpi .sub { font-size: 11px; color: var(--text-light); margin-top: 3px; }
+  .kpi.green .value { color: var(--green); }
+  .kpi.gold .value { color: var(--gold); }
+  .kpi.blue .value { color: var(--blue); }
+
+  /* P&L TABLE */
+  .pl-row { display: flex; justify-content: space-between; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--gray); font-size: 14px; }
+  .pl-row:last-child { border-bottom: none; }
+  .pl-row.section { background: var(--gray); margin: 0 -18px; padding: 8px 18px; font-weight: 700; font-size: 11px; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.5px; border: none; margin-top: 4px; }
+  .pl-row.total-row { background: #f8f9fa; margin: 0 -18px; padding: 12px 18px; border-top: 2px solid var(--gray2); border-bottom: none; font-weight: 800; font-size: 15px; }
+  .pl-row.net-row { background: #e8f5e9; margin: 0 -18px; padding: 14px 18px; border-top: 3px solid var(--green); font-weight: 900; font-size: 16px; }
+  .indent { padding-left: 14px; color: var(--text-light); font-size: 13px; }
+  .amount.pos { color: var(--green); }
+  .amount.neg { color: var(--red); }
+  .amount.warn { color: var(--orange); }
+
+  /* PER JOB */
+  .perjob-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+  .perjob-box { border-radius: 8px; padding: 14px; text-align: center; }
+  .perjob-box .lbl { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); margin-bottom: 4px; }
+  .perjob-box .val { font-size: 22px; font-weight: 900; }
+
+  /* OPEX TABLE */
+  .opex-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--gray); font-size: 13px; }
+  .opex-row:last-child { border-bottom: none; }
+  .opex-bar { height: 4px; background: var(--gray2); border-radius: 2px; margin-top: 3px; }
+  .opex-fill { height: 100%; border-radius: 2px; background: var(--blue); }
+
+  /* SCENARIOS */
+  .sc-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-light); }
+  .field input { border: 1.5px solid var(--gray2); border-radius: 8px; padding: 9px 12px; font-size: 15px; font-weight: 700; color: var(--text); outline: none; }
+  .field input:focus { border-color: var(--gold); }
+
+  .alert { padding: 12px 14px; border-radius: 8px; font-size: 13px; line-height: 1.5; margin-top: 12px; }
+  .alert-green { background: #e8f5e9; border-left: 4px solid var(--green); }
+  .alert-orange { background: #fff8e1; border-left: 4px solid var(--orange); }
+  .alert-red { background: #fdf0ef; border-left: 4px solid var(--red); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Renew<span>Build</span></div>
+  <div class="badge">P&L Real 2025</div>
+</header>
+
+<main>
+
+  <!-- KPIs -->
+  <div class="kpi-grid">
+    <div class="kpi gold">
+      <div class="label">Revenue 2025</div>
+      <div class="value">$228K</div>
+      <div class="sub">35 clientes · $6,533 avg</div>
+    </div>
+    <div class="kpi green">
+      <div class="label">Gross Profit</div>
+      <div class="value">$85.6K</div>
+      <div class="sub">37.4% — sólido</div>
+    </div>
+    <div class="kpi blue">
+      <div class="label">Net (real)</div>
+      <div class="value">$31.8K</div>
+      <div class="sub">sin renta personal</div>
+    </div>
+  </div>
+
+  <!-- P&L Statement -->
+  <div class="card">
+    <div class="card-header"><span class="icon">📊</span> Profit & Loss — 2025 Real (corregido)</div>
+    <div class="card-body">
+
+      <div class="pl-row">
+        <span>Revenue total (35 clientes)</span>
+        <span class="amount pos">$228,652</span>
+      </div>
+
+      <div class="pl-row section">Costo de Producción (COGS)</div>
+      <div class="pl-row">
+        <span class="indent">Subcontratistas (labor)</span>
+        <span class="amount neg">-$92,620</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Materiales (SW, HD, Menards + Staples*)</span>
+        <span class="amount neg">-$50,434</span>
+      </div>
+      <div class="pl-row total-row">
+        <span>Gross Profit</span>
+        <span class="amount pos">$85,598 <small style="font-weight:400;color:var(--text-light)">(37.4%)</small></span>
+      </div>
+
+      <div class="pl-row section">Gastos Operativos del Negocio</div>
+      <div class="pl-row">
+        <span class="indent">Marketing (Thumbtack, Yelp, Networx, etc.)</span>
+        <span class="amount neg">-$12,130</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Vehículo (pago Toyota + reparación + gasolina)</span>
+        <span class="amount neg">-$9,866</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Seguros (GL, auto, workers comp)</span>
+        <span class="amount neg">-$5,857</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Paychex (payroll processing)</span>
+        <span class="amount neg">-$6,787</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Teléfonos (T-Mobile, Ooma, OpenPhone)</span>
+        <span class="amount neg">-$2,868</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Software (CRM, FreshBooks, CompanyCam, etc.)</span>
+        <span class="amount neg">-$2,249</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Internet + Utilities (ComEd, Peoples Gas)</span>
+        <span class="amount neg">-$2,399</span>
+      </div>
+      <div class="pl-row">
+        <span class="indent">Licencias, impuestos, Stripe, otros</span>
+        <span class="amount neg">-$5,656</span>
+      </div>
+      <div class="pl-row total-row">
+        <span>Total Operating Expenses</span>
+        <span class="amount neg">-$47,812</span>
+      </div>
+
+      <div class="pl-row" style="padding:10px 0">
+        <span>Operating Income (antes de tu salario)</span>
+        <span class="amount pos"><strong>$37,786</strong></span>
+      </div>
+
+      <div class="pl-row">
+        <span class="indent">Tu salario W-2 (Paychex 2025)</span>
+        <span class="amount neg">-$5,939</span>
+      </div>
+
+      <div class="pl-row net-row">
+        <span>NET INCOME 2025</span>
+        <span class="amount pos">$31,847</span>
+      </div>
+
+      <div class="alert alert-orange" style="margin-top:14px">
+        <strong>⚠️ Salary gap:</strong> Solo te pagaste $5,307 en W-2. Deberías haberte pagado ~$25K. La diferencia ($19,693) debe tomarse como distribución S-Corp — no es gasto del negocio, pero es dinero tuyo. Tu take-home real 2025: ~$25K salary + $6.8K net = ~$31.8K total.
+      </div>
+
+      <div class="alert alert-green">
+        <strong>✅ Lo que estaba inflando el número:</strong> La renta del apartamento ($23,130) y las gift cards de Staples ($4,298) estaban mal clasificadas. Sin esos errores, el negocio es rentable con 13.9% net margin.
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Per Job -->
+  <div class="card">
+    <div class="card-header"><span class="icon">🔧</span> Análisis por Job</div>
+    <div class="card-body">
+      <div class="perjob-grid">
+        <div class="perjob-box" style="background:#f5f5f5">
+          <div class="lbl">Revenue / job</div>
+          <div class="val">$6,533</div>
+        </div>
+        <div class="perjob-box" style="background:#e8f5e9">
+          <div class="lbl">Gross / job</div>
+          <div class="val" style="color:var(--green)">$2,446</div>
+        </div>
+        <div class="perjob-box" style="background:#e3f2fd">
+          <div class="lbl">OpEx / job</div>
+          <div class="val" style="color:var(--blue)">$1,366</div>
+        </div>
+        <div class="perjob-box" style="background:#f0f8f4">
+          <div class="lbl">Net / job</div>
+          <div class="val" style="color:var(--green)">$910</div>
+        </div>
+      </div>
+      <div class="alert alert-green" style="margin-top:14px">
+        <strong>Con el estimador al 40-45%</strong> el avg job sube de $6,533 → $7,200–$7,800. Cada $600 más por job × 44 jobs = <strong>+$26,400 al net anual</strong> sin cambiar nada en los gastos.
+      </div>
+    </div>
+  </div>
+
+  <!-- OpEx Breakdown -->
+  <div class="card">
+    <div class="card-header"><span class="icon">💸</span> Gastos Operativos — Dónde va el dinero</div>
+    <div class="card-body">
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Marketing</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:100%;background:var(--orange)"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$12,130 <small style="color:var(--text-light)">(5.3% rev)</small></span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Vehículo (Toyota + reparación + gas)</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:81%;background:var(--blue)"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$9,866</span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Paychex payroll</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:56%;background:var(--red)"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px;color:var(--red)">$6,787 ⚠️</span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Seguros</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:48%"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$5,857</span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Otros (licencias, Stripe, taxes, parking...)</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:46%"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$5,656</span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Teléfonos</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:24%"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$2,868</span>
+      </div>
+      <div class="opex-row">
+        <div style="flex:1">
+          <span style="font-weight:700">Internet + Utilities</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:20%"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$2,399</span>
+      </div>
+      <div class="opex-row" style="border:none">
+        <div style="flex:1">
+          <span style="font-weight:700">Software (CRM, FB, CompanyCam...)</span>
+          <div class="opex-bar"><div class="opex-fill" style="width:18%"></div></div>
+        </div>
+        <span style="font-weight:700;margin-left:16px">$2,249</span>
+      </div>
+
+      <div class="alert alert-red" style="margin-top:14px">
+        <strong>🚨 Paychex $6,787</strong> — Es muy alto para solo procesar tu propio W-2. Para 2026 esto debería costar ~$600–800/año. Verifica qué está procesando exactamente. Si hay costos incluidos que son de otra categoría, eso es ahorro inmediato de ~$6K.
+      </div>
+    </div>
+  </div>
+
+  <!-- What-If Scenario -->
+  <div class="card">
+    <div class="card-header"><span class="icon">🎯</span> Proyección 2026 — ¿Qué necesito para ganar $X?</div>
+    <div class="card-body">
+      <div class="sc-grid">
+        <div class="field">
+          <label>Jobs por año</label>
+          <input type="number" id="sc-jobs" value="44" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Precio promedio / job ($)</label>
+          <input type="number" id="sc-avg" value="7000" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>% Labor subs</label>
+          <input type="number" id="sc-labor" value="40.5" step="0.5" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>% Materiales</label>
+          <input type="number" id="sc-mat" value="22" step="0.5" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Marketing anual ($)</label>
+          <input type="number" id="sc-mkt" value="12130" oninput="calc()">
+        </div>
+        <div class="field">
+          <label>Tu salario objetivo ($)</label>
+          <input type="number" id="sc-owner" value="25000" oninput="calc()">
+        </div>
+      </div>
+      <div id="sc-result" style="background:var(--gray);border-radius:10px;padding:16px;margin-top:14px"></div>
+    </div>
+  </div>
+
+  <!-- Path to goals -->
+  <div class="card">
+    <div class="card-header"><span class="icon">🚀</span> Tu camino a $50K net</div>
+    <div class="card-body">
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center">
+        <div style="border:2px solid var(--gray2);border-radius:10px;padding:14px">
+          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase">2025 Real</div>
+          <div style="font-size:22px;font-weight:900;color:var(--blue);margin:6px 0">$31.8K</div>
+          <div style="font-size:12px;color:var(--text-light)">44 jobs · $6,533</div>
+        </div>
+        <div style="border:2px solid var(--gold);border-radius:10px;padding:14px;background:#FFF8E8">
+          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase">Meta 2026</div>
+          <div style="font-size:22px;font-weight:900;color:var(--gold);margin:6px 0">$50K+</div>
+          <div style="font-size:12px;color:var(--text-light)">44 jobs · $7,500 avg</div>
+        </div>
+        <div style="border:2px solid var(--green);border-radius:10px;padding:14px;background:#e8f5e9">
+          <div style="font-size:11px;font-weight:700;color:var(--text-light);text-transform:uppercase">Meta 2027</div>
+          <div style="font-size:22px;font-weight:900;color:var(--green);margin:6px 0">$75K+</div>
+          <div style="font-size:12px;color:var(--text-light)">55 jobs · $7,500 avg</div>
+        </div>
+      </div>
+
+      <div class="alert alert-green" style="margin-top:14px;line-height:1.7">
+        <strong>3 pasos para $50K en 2026:</strong><br>
+        1. Subir avg job de $6,533 → <strong>$7,500</strong> (estimador al 40-45% lo hace automático)<br>
+        2. Revisar Paychex — posible ahorro de <strong>$5,000–6,000/año</strong><br>
+        3. Mantener 44 jobs (no necesitas más — solo cobrar más)<br>
+        <strong>Resultado: ~$50K net sin contratar ni cambiar el modelo de negocio.</strong>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<script>
+const FIXED_OPEX_BASE = 47812 - 12130; // sin marketing = $35,682
+
+function fmt(n) {
+  const neg = n < 0;
+  const abs = Math.abs(n);
+  const s = abs >= 1000 ? abs.toLocaleString('en-US', {maximumFractionDigits:0}) : abs.toFixed(0);
+  return (neg ? '-$' : '$') + s;
+}
+
+function calc() {
+  const jobs = +document.getElementById('sc-jobs').value || 0;
+  const avg  = +document.getElementById('sc-avg').value  || 0;
+  const lp   = +document.getElementById('sc-labor').value / 100;
+  const mp   = +document.getElementById('sc-mat').value  / 100;
+  const mkt  = +document.getElementById('sc-mkt').value  || 0;
+  const own  = +document.getElementById('sc-owner').value || 0;
+
+  const rev   = jobs * avg;
+  const labor = rev * lp;
+  const mat   = rev * mp;
+  const gross = rev - labor - mat;
+  const gpct  = rev > 0 ? (gross/rev*100).toFixed(1) : 0;
+  const opex  = FIXED_OPEX_BASE + mkt;
+  const net   = gross - opex - own;
+  const color = net >= 50000 ? '#27ae60' : net >= 0 ? '#2980b9' : '#e74c3c';
+
+  document.getElementById('sc-result').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;text-align:center">
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666">Revenue</div>
+        <div style="font-size:18px;font-weight:900">${fmt(rev)}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666">Gross ${gpct}%</div>
+        <div style="font-size:18px;font-weight:900;color:#27ae60">${fmt(gross)}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666">Tu salario</div>
+        <div style="font-size:18px;font-weight:900;color:#e67e22">${fmt(own)}</div>
+      </div>
+      <div>
+        <div style="font-size:10px;font-weight:700;text-transform:uppercase;color:#666">Net</div>
+        <div style="font-size:18px;font-weight:900;color:${color}">${fmt(net)}</div>
+      </div>
+    </div>
+    <div style="margin-top:10px;padding-top:10px;border-top:1px solid #e0e0e0;font-size:12px;color:#666;text-align:center">
+      Labor: ${fmt(labor)} · Materiales: ${fmt(mat)} · OpEx: ${fmt(opex)}
+    </div>
+  `;
+}
+
+calc();
+</script>
+</body>
+</html>
