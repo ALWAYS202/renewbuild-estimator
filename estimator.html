@@ -573,6 +573,15 @@ function setCoats(n, el) {
   calculate();
 }
 
+function setRoomCoats(id, n, el) {
+  const room = getRoomData(id);
+  if (!room) return;
+  room.coats = n;
+  document.querySelectorAll(`#room-coats-${id} .coat-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
 function setComplexity(factor, el) {
   complexityFactor = factor;
   document.querySelectorAll('#complexitySelector .coat-btn').forEach(b => b.classList.remove('active'));
@@ -612,7 +621,7 @@ function updateOverheadPct() {
 // ============================================================
 function addRoom(defaultName) {
   const id = ++roomCounter;
-  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim'] };
+  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim'], coats: numCoats };
   rooms.push(room);
   renderRooms();
   // auto-open new room
@@ -751,6 +760,13 @@ function renderRooms() {
           <div class="surface-chip ${room.surfaces.includes('trim')?'checked':''}" onclick="toggleSurface(${room.id}, 'trim', this)">🪟 Trim & Doors</div>
         </div>
         <div class="divider"></div>
+        <div class="section-label">Coats — este cuarto</div>
+        <div class="coats-selector" id="room-coats-${room.id}" style="margin-bottom:4px">
+          <div class="coat-btn ${(room.coats||1)===1?'active':''}" onclick="setRoomCoats(${room.id}, 1, this)">1 Coat</div>
+          <div class="coat-btn ${(room.coats||1)===2?'active':''}" onclick="setRoomCoats(${room.id}, 2, this)">2 Coats</div>
+          <div class="coat-btn ${(room.coats||1)===3?'active':''}" onclick="setRoomCoats(${room.id}, 3, this)">3 Coats</div>
+        </div>
+        <div class="divider"></div>
         <div class="section-label">Openings</div>
         <div class="form-grid thirds">
           <div class="field">
@@ -780,44 +796,41 @@ function calculate() {
     return;
   }
 
-  // Aggregate SF across rooms
+  // Aggregate SF and hours per room (per-room coats)
   let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0;
-  let totalFlushDoors = 0, totalPanelDoors = 0;
+  let wallCoatSF = 0, ceilCoatSF = 0, trimCoatSF = 0;
+  let wallHours = 0, ceilHours = 0, trimHours = 0;
 
   rooms.forEach(room => {
     const sf = calcRoomSF(room);
-    if (room.surfaces.includes('walls')) totalWallSF += sf.walls;
-    if (room.surfaces.includes('ceiling')) totalCeilSF += sf.ceiling;
-    if (room.surfaces.includes('trim')) {
+    const c = room.coats || 1;
+    if (room.surfaces.includes('walls') && sf.walls > 0) {
+      totalWallSF += sf.walls;
+      wallCoatSF += sf.walls * c;
+      wallHours += sf.walls / RATES.walls_roll_1st;
+      if (c > 1) wallHours += sf.walls * (c - 1) / RATES.walls_roll_add;
+    }
+    if (room.surfaces.includes('ceiling') && sf.ceiling > 0) {
+      totalCeilSF += sf.ceiling;
+      ceilCoatSF += sf.ceiling * c;
+      ceilHours += sf.ceiling / RATES.ceil_roll_1st;
+      if (c > 1) ceilHours += sf.ceiling * (c - 1) / RATES.ceil_roll_add;
+    }
+    if (room.surfaces.includes('trim') && sf.trim > 0) {
       totalTrimSF += sf.trim;
-      totalFlushDoors += sf.doorsFlush;
-      totalPanelDoors += sf.doorsPanel;
+      trimCoatSF += sf.trim * c;
+      const winSF = (parseInt(room.windows) || 0) * 18;
+      const baseArea = Math.max(0, sf.trim - (sf.doorsFlush * 34) - (sf.doorsPanel * 34) - winSF);
+      const h1 = baseArea / RATES.trim_brush_1st + sf.doorsFlush * 34 / RATES.door_flush_1st + sf.doorsPanel * 34 / (RATES.door_flush_1st * 0.75);
+      const hAdd = baseArea / RATES.trim_brush_add + sf.doorsFlush * 34 / RATES.door_flush_add + sf.doorsPanel * 34 / (RATES.door_flush_add * 0.75);
+      trimHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
     }
   });
 
   const hasPrimer = document.getElementById('usePrimer').checked;
-
-  // --- HOURS ---
-  let wallHours = 0, ceilHours = 0, trimHours = 0;
-
-  if (totalWallSF > 0) {
+  if (hasPrimer) {
     wallHours += totalWallSF / RATES.walls_roll_1st;
-    if (numCoats > 1) wallHours += totalWallSF * (numCoats - 1) / RATES.walls_roll_add;
-    if (hasPrimer) wallHours += totalWallSF / RATES.walls_roll_1st;
-  }
-  if (totalCeilSF > 0) {
     ceilHours += totalCeilSF / RATES.ceil_roll_1st;
-    if (numCoats > 1) ceilHours += totalCeilSF * (numCoats - 1) / RATES.ceil_roll_add;
-    if (hasPrimer) ceilHours += totalCeilSF / RATES.ceil_roll_1st;
-  }
-  if (totalTrimSF > 0) {
-    // Trim (base molding area)
-    const baseArea = totalTrimSF - (totalFlushDoors * 34) - (rooms.reduce((a,r)=>a+(parseInt(r.windows)||0),0)*18);
-    const doorArea = totalFlushDoors * 34 + totalPanelDoors * 34;
-    const trimOnlyHours = Math.max(0, baseArea) / RATES.trim_brush_1st * numCoats;
-    const doorHours = totalFlushDoors * 34 / RATES.door_flush_1st * numCoats +
-                      totalPanelDoors * 34 / (RATES.door_flush_1st * 0.75) * numCoats;
-    trimHours = trimOnlyHours + doorHours;
   }
 
   const productionHours = (wallHours + ceilHours + trimHours) * complexityFactor;
@@ -835,9 +848,9 @@ function calculate() {
   const [trimPrice, trimName] = document.getElementById('paintTrim').value.split('|');
   const [primerPrice, primerName] = hasPrimer ? document.getElementById('paintPrimer').value.split('|') : [0, ''];
 
-  const wallGals = Math.ceil(totalWallSF * numCoats / COVERAGE.walls * 1.10);
-  const ceilGals = Math.ceil(totalCeilSF * numCoats / COVERAGE.ceiling * 1.10);
-  const trimGals = Math.ceil(totalTrimSF * numCoats / COVERAGE.trim * 1.10);
+  const wallGals = Math.ceil(wallCoatSF / COVERAGE.walls * 1.10);
+  const ceilGals = Math.ceil(ceilCoatSF / COVERAGE.ceiling * 1.10);
+  const trimGals = Math.ceil(trimCoatSF / COVERAGE.trim * 1.10);
   const primerGals = hasPrimer ? Math.ceil((totalWallSF + totalCeilSF) / COVERAGE.primer * 1.10) : 0;
 
   const wallMatCost = wallGals * parseFloat(wallPrice);
