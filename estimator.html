@@ -1416,22 +1416,72 @@ function saveToSheets() {
   btn.textContent = '⏳ Saving...';
   status.style.display = 'none';
 
-  const payload = {
-    client: document.getElementById('clientName').value || '',
-    address: document.getElementById('clientAddress').value || '',
-    rooms: rooms.length,
-    totalSF: (r.totalWallSF + r.totalCeilSF + r.totalTrimSF + r.totalDoorSF + r.totalWindowSF).toFixed(0),
-    complexity: ['Simple','Medium','High/Stairs'][complexityFactor === 1.75 ? 0 : complexityFactor === 2.25 ? 1 : 2],
-    painters: r.numPainters,
-    laborHours: r.totalHours.toFixed(1),
-    laborCost: r.laborCost.toFixed(2),
-    materialCost: r.totalMaterials.toFixed(2),
-    suppliesCost: r.jobSupplies.toFixed(2),
-    overhead: r.overheadAmt.toFixed(2),
-    margin: Math.round(r.margin * 100),
-    totalPrice: r.price.toFixed(2),
-    notes: document.getElementById('estNotes') ? document.getElementById('estNotes').value : ''
-  };
+  const client = document.getElementById('clientName').value || '';
+  const address = document.getElementById('clientAddress').value || '';
+  const notes = document.getElementById('estNotes') ? document.getElementById('estNotes').value : '';
+  let payload = {};
+
+  if (r.jobType === 'exterior') {
+    payload = {
+      client, address, notes,
+      module: 'Exterior',
+      roomsOrPieces: extSides.length + ' sides',
+      totalSF: r.totalSidingSF.toFixed(0),
+      prepLevel: r.extPrepLevel,
+      complexity: r.extHeightFactor === 1.0 ? '1-Story' : r.extHeightFactor === 1.3 ? '2-Story' : '3-Story',
+      painters: r.extNumPainters,
+      laborHours: r.totalHours.toFixed(1),
+      laborCost: r.laborCost.toFixed(2),
+      materialCost: r.totalMatBase.toFixed(2),
+      matMarkup: r.totalMatMarkup.toFixed(2),
+      suppliesCost: (r.jobSupplies || 0).toFixed(2),
+      overhead: r.overheadAmt.toFixed(2),
+      margin: Math.round(r.margin * 100),
+      totalCost: r.totalCost.toFixed(2),
+      totalPrice: r.price.toFixed(2),
+      profit: r.profit.toFixed(2),
+    };
+  } else if (r.jobType === 'cabinets') {
+    payload = {
+      client, address, notes,
+      module: 'Cabinets',
+      roomsOrPieces: r.totalPieces + ' pieces',
+      totalSF: '',
+      prepLevel: r.cabPrepLevel,
+      complexity: '',
+      painters: 'Sub @ $' + r.tierRate + '/pc',
+      laborHours: '',
+      laborCost: r.totalSubCost.toFixed(2),
+      materialCost: r.totalMatBase.toFixed(2),
+      matMarkup: r.totalMatMarkup.toFixed(2),
+      suppliesCost: '0',
+      overhead: r.overheadAmt.toFixed(2),
+      margin: Math.round(r.margin * 100),
+      totalCost: r.totalCost.toFixed(2),
+      totalPrice: r.price.toFixed(2),
+      profit: r.profit.toFixed(2),
+    };
+  } else {
+    payload = {
+      client, address, notes,
+      module: 'Interior',
+      roomsOrPieces: rooms.length + ' rooms',
+      totalSF: (r.totalWallSF + r.totalCeilSF + r.totalTrimSF + r.totalDoorSF + r.totalWindowSF).toFixed(0),
+      prepLevel: '',
+      complexity: ['Simple','Medium','High/Stairs'][complexityFactor === 1.75 ? 0 : complexityFactor === 2.25 ? 1 : 2],
+      painters: r.numPainters,
+      laborHours: r.totalHours.toFixed(1),
+      laborCost: r.laborCost.toFixed(2),
+      materialCost: r.totalMaterials.toFixed(2),
+      matMarkup: '0',
+      suppliesCost: r.jobSupplies.toFixed(2),
+      overhead: r.overheadAmt.toFixed(2),
+      margin: Math.round(r.margin * 100),
+      totalCost: r.totalCost.toFixed(2),
+      totalPrice: r.price.toFixed(2),
+      profit: r.profit.toFixed(2),
+    };
+  }
 
   fetch(SHEETS_URL, {
     method: 'POST',
