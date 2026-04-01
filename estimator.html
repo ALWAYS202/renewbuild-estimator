@@ -169,7 +169,7 @@
   <div>
     <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
   </div>
-  <div class="badge">Estimator v1.5</div>
+  <div class="badge">Estimator v1.6</div>
 </header>
 
 <main>
@@ -638,16 +638,171 @@
       </button>
     </div>
 
-    <!-- CABINETS (placeholder) -->
+    <!-- CABINETS MODULE -->
     <div id="section-cabinets" style="display:none">
+
+      <!-- PIECE COUNT -->
       <div class="card">
+        <div class="card-header"><span class="icon">🗄️</span> Cabinet Pieces</div>
         <div class="card-body">
-          <div class="empty-state">
-            <div class="icon">🗄️</div>
-            <p><strong>Cabinets coming in v2</strong><br>Switch to Interior for now.</p>
+          <div class="section-label">Doors</div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="field">
+              <label>Upper Doors</label>
+              <input type="number" id="cabUpperDoors" value="10" min="0" onchange="calculateCabinets()">
+            </div>
+            <div class="field">
+              <label>Lower Doors</label>
+              <input type="number" id="cabLowerDoors" value="6" min="0" onchange="calculateCabinets()">
+            </div>
+          </div>
+          <div class="section-label">Drawers</div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="field">
+              <label>Drawer Fronts</label>
+              <input type="number" id="cabDrawers" value="8" min="0" onchange="calculateCabinets()">
+            </div>
+            <div class="field">
+              <label>Panels / Fillers / End Caps</label>
+              <input type="number" id="cabPanels" value="0" min="0" onchange="calculateCabinets()">
+            </div>
+          </div>
+          <div style="background:var(--gray);border-radius:8px;padding:10px 12px;font-size:14px;font-weight:700;display:flex;justify-content:space-between">
+            <span>Total Pieces</span>
+            <span id="cabTotalPieces">24</span>
           </div>
         </div>
       </div>
+
+      <!-- PREP LEVEL -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🔧</span> Prep Level</div>
+        <div class="card-body">
+          <div style="display:flex;gap:8px;margin-bottom:14px" id="cabPrepSelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setCabPrep('light', this)">
+              Light<br><span style="font-size:10px;color:var(--text-light)">Scuff sand<br>Clean substrate</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setCabPrep('moderate', this)">
+              Moderate<br><span style="font-size:10px;color:var(--text-light)">Small repairs<br>Adhesion issues</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setCabPrep('heavy', this)">
+              Heavy<br><span style="font-size:10px;color:var(--text-light)">Chipping/peeling<br>Major patch/fill</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Add-Ons</div>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:10px;">
+            <input type="checkbox" id="cabTwoColor" onchange="calculateCabinets()" style="width:18px;height:18px;accent-color:var(--gold)">
+            Two-color kitchen (+$300)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:10px;">
+            <input type="checkbox" id="cabNewConstruction" onchange="calculateCabinets()" style="width:18px;height:18px;accent-color:var(--gold)">
+            New construction / raw wood (+$500)
+          </label>
+          <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;margin-bottom:10px;">
+            <input type="checkbox" id="cabPrevPainted" onchange="calculateCabinets()" style="width:18px;height:18px;accent-color:var(--gold)">
+            Previously painted/refinished (+$800)
+          </label>
+        </div>
+      </div>
+
+      <!-- PAINT SELECTION -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🎨</span> Paint (You Supply)</div>
+        <div class="card-body">
+          <div class="section-label">Cabinet Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="cabPaintProduct" onchange="calculateCabinets()">
+              <option value="49.95|ProClassic Waterborne Enamel">ProClassic Waterborne Enamel — $49.95/gal</option>
+              <option value="61.95|Emerald Urethane Trim" selected>Emerald Urethane Trim Enamel — $61.95/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Primer</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="cabPrimerProduct" onchange="calculateCabinets()">
+              <option value="30.95|Extreme Block Primer">Extreme Block Primer — $30.95/gal</option>
+              <option value="61.95|Extreme Bond Primer" selected>Extreme Bond Primer — $61.95/gal</option>
+              <option value="55.45|White Shellac Primer">White Shellac Primer — $55.45/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Estimated Gallons</div>
+          <div class="form-grid" style="margin-bottom:14px">
+            <div class="field">
+              <label>Paint (gals)</label>
+              <input type="number" id="cabPaintGals" value="2" min="1" step="1" onchange="calculateCabinets()">
+            </div>
+            <div class="field">
+              <label>Primer (gals)</label>
+              <input type="number" id="cabPrimerGals" value="1" min="0" step="1" onchange="calculateCabinets()">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-light);margin-top:4px;">Rule of thumb: 1 gal paint per ~15 pieces (2 coats). Adjust as needed.</div>
+
+          <div class="divider"></div>
+          <div class="section-label">Paint Markup</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div style="font-size:13px;color:var(--text-light);">Markup on materials you supply</div>
+            <div class="markup-val" id="cabMarkupDisplay">15%</div>
+          </div>
+          <input type="range" id="cabMarkupSlider" min="0" max="30" value="15" oninput="updateCabMarkup()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>15%</span><span>20%</span><span>30%</span></div>
+        </div>
+      </div>
+
+      <!-- SUB COST & JOB SETTINGS -->
+      <div class="card">
+        <div class="card-header"><span class="icon">💰</span> Sub Rates & Settings</div>
+        <div class="card-body">
+          <div class="section-label">Sub Rate per Piece</div>
+          <div style="background:var(--gray);border-radius:8px;padding:12px;margin-bottom:14px">
+            <div style="display:flex;justify-content:space-between;font-size:14px;margin-bottom:4px">
+              <span>Current tier rate:</span>
+              <span id="cabCurrentRate" style="font-weight:700;color:var(--dark3)">$140/piece</span>
+            </div>
+            <div style="font-size:11px;color:var(--text-light);">Based on prep level selected above</div>
+          </div>
+
+          <div class="section-label">Override Sub Rate (optional)</div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Custom $/piece (leave 0 to use tier)</label>
+            <input type="number" id="cabCustomRate" value="0" min="0" step="5" onchange="calculateCabinets()">
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Minimum Job Cost (sub)</div>
+          <div class="field" style="margin-bottom:14px">
+            <label>Sub minimum — applied if piece total is lower</label>
+            <input type="number" id="cabSubMinimum" value="2000" min="0" step="100" onchange="calculateCabinets()">
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Overhead % of price</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div style="font-size:13px;color:var(--text-light);">Business operations cost</div>
+            <div class="markup-val" id="cabOverheadDisplay" style="color:var(--dark3)">15%</div>
+          </div>
+          <input type="range" id="cabOverheadSlider" min="10" max="25" value="15" oninput="updateCabOverhead()">
+          <div class="margin-labels"><span>10%</span><span>13%</span><span>15%</span><span>20%</span><span>25%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Desired Profit Margin</div>
+          <div class="margin-display">
+            <span id="cabMarginDisplay">40%</span>
+            <span>profit margin</span>
+          </div>
+          <input type="range" id="cabMarginSlider" min="20" max="60" value="40" oninput="updateCabMargin()">
+          <div class="margin-labels">
+            <span>20%</span><span>30%</span><span style="color:var(--gold);font-weight:700">40%</span><span style="color:var(--green);font-weight:700">50%</span><span>60%</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold btn-full" style="font-size:16px; padding:16px;" onclick="showResults()">
+        Calculate Cabinet Estimate →
+      </button>
     </div>
 
   </div><!-- /tab-estimate -->
@@ -803,6 +958,22 @@ const EXT_COVERAGE = {
   siding: 350,   // SF per gallon
   trim: 350,
   primer: 300,
+};
+
+// Cabinet state & rates (sub-contracted model)
+let cabPrepLevel = 'light';
+let cabMatMarkup = 0.15;
+let cabOverheadPct = 0.15;
+
+const CAB_SUB_RATES = {
+  light: 140,      // $/piece — scuff sand, clean substrate
+  moderate: 150,   // $/piece — small repairs, adhesion concerns
+  heavy: 175,      // $/piece — chipping, peeling, major patch/fill
+};
+const CAB_ADDONS = {
+  twoColor: 300,
+  newConstruction: 500,
+  prevPainted: 800,
 };
 
 // ============================================================
@@ -1090,6 +1261,7 @@ function renderRooms() {
 // ============================================================
 function calculate() {
   if (jobType === 'exterior') return calculateExterior();
+  if (jobType === 'cabinets') return calculateCabinets();
   if (rooms.length === 0) {
     document.getElementById('preview-price').textContent = '—';
     return;
@@ -1293,6 +1465,7 @@ function fmtN(n) { return n.toFixed(1); }
 
 function renderResults() {
   if (jobType === 'exterior') return renderExteriorResults();
+  if (jobType === 'cabinets') return renderCabinetResults();
   if (!lastResult) { calculate(); }
   if (!lastResult) return;
 
@@ -1801,6 +1974,180 @@ function renderExteriorResults() {
     '<div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;"><div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div><div class="result-value gold">' + '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</div></div>' +
     '<div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">' +
       '⚡ ' + fmt(r.price/r.totalSidingSF) + '/SF all-in &nbsp;|&nbsp; ⏱ ' + fmtN(r.totalHours) + ' total hrs &nbsp;|&nbsp; 📅 ~' + r.jobDays + ' day' + (r.jobDays>1?'s':'') +
+    '</div>';
+}
+
+// ============================================================
+// CABINETS — UI HELPERS
+// ============================================================
+function setCabPrep(level, el) {
+  cabPrepLevel = level;
+  document.querySelectorAll('#cabPrepSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('cabCurrentRate').textContent = '$' + CAB_SUB_RATES[level] + '/piece';
+  calculateCabinets();
+}
+
+function updateCabMarkup() {
+  cabMatMarkup = parseInt(document.getElementById('cabMarkupSlider').value) / 100;
+  document.getElementById('cabMarkupDisplay').textContent = Math.round(cabMatMarkup * 100) + '%';
+  calculateCabinets();
+}
+
+function updateCabOverhead() {
+  cabOverheadPct = parseInt(document.getElementById('cabOverheadSlider').value) / 100;
+  document.getElementById('cabOverheadDisplay').textContent = Math.round(cabOverheadPct * 100) + '%';
+  calculateCabinets();
+}
+
+function updateCabMargin() {
+  document.getElementById('cabMarginDisplay').textContent = document.getElementById('cabMarginSlider').value + '%';
+  calculateCabinets();
+}
+
+// ============================================================
+// CABINETS — CALCULATE
+// ============================================================
+function calculateCabinets() {
+  const upperDoors = parseInt(document.getElementById('cabUpperDoors').value) || 0;
+  const lowerDoors = parseInt(document.getElementById('cabLowerDoors').value) || 0;
+  const drawers = parseInt(document.getElementById('cabDrawers').value) || 0;
+  const panels = parseInt(document.getElementById('cabPanels').value) || 0;
+  const totalPieces = upperDoors + lowerDoors + drawers + panels;
+
+  document.getElementById('cabTotalPieces').textContent = totalPieces;
+
+  if (totalPieces === 0) {
+    document.getElementById('preview-price').textContent = '—';
+    lastResult = null;
+    return;
+  }
+
+  // Sub cost
+  const customRate = parseFloat(document.getElementById('cabCustomRate').value) || 0;
+  const tierRate = customRate > 0 ? customRate : CAB_SUB_RATES[cabPrepLevel];
+  const subMinimum = parseFloat(document.getElementById('cabSubMinimum').value) || 0;
+  const subPieceTotal = totalPieces * tierRate;
+  const subCost = Math.max(subMinimum, subPieceTotal);
+
+  // Add-ons (charged to sub, passed through to client)
+  let addons = 0;
+  const twoColor = document.getElementById('cabTwoColor').checked;
+  const newConst = document.getElementById('cabNewConstruction').checked;
+  const prevPainted = document.getElementById('cabPrevPainted').checked;
+  if (twoColor) addons += CAB_ADDONS.twoColor;
+  if (newConst) addons += CAB_ADDONS.newConstruction;
+  if (prevPainted) addons += CAB_ADDONS.prevPainted;
+  const totalSubCost = subCost + addons;
+
+  // Materials (you supply paint)
+  const [paintPriceStr, paintName] = document.getElementById('cabPaintProduct').value.split('|');
+  const paintPrice = parseFloat(paintPriceStr);
+  const [primerPriceStr, primerName] = document.getElementById('cabPrimerProduct').value.split('|');
+  const primerPrice = parseFloat(primerPriceStr);
+
+  const paintGals = parseInt(document.getElementById('cabPaintGals').value) || 0;
+  const primerGals = parseInt(document.getElementById('cabPrimerGals').value) || 0;
+
+  const paintMatCost = paintGals * paintPrice;
+  const primerMatCost = primerGals * primerPrice;
+  const totalMatBase = paintMatCost + primerMatCost;
+  const totalMatMarkup = totalMatBase * cabMatMarkup;
+  const totalMaterials = totalMatBase + totalMatMarkup;
+
+  // Financials
+  const margin = parseInt(document.getElementById('cabMarginSlider').value) / 100;
+  const directCost = totalSubCost + totalMaterials;
+  const price = directCost / (1 - margin - cabOverheadPct);
+  const overheadAmt = price * cabOverheadPct;
+  const totalCost = directCost + overheadAmt;
+  const profit = price - totalCost;
+
+  // Timeline estimate
+  let jobDays;
+  if (totalPieces <= 18) jobDays = '2-3';
+  else if (totalPieces <= 32) jobDays = '3-4';
+  else if (totalPieces <= 50) jobDays = '4-6';
+  else jobDays = '6-8';
+
+  document.getElementById('preview-price').textContent = '$' + price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  lastResult = {
+    jobType: 'cabinets',
+    upperDoors, lowerDoors, drawers, panels, totalPieces,
+    cabPrepLevel, tierRate, subMinimum,
+    subPieceTotal, subCost, addons, totalSubCost,
+    twoColor, newConst, prevPainted,
+    paintName, paintPrice, paintGals, paintMatCost,
+    primerName, primerPrice, primerGals, primerMatCost,
+    totalMatBase, totalMatMarkup, cabMatMarkup, totalMaterials,
+    directCost, overheadAmt, cabOverheadPct,
+    grossProfit: price - directCost,
+    totalCost, price, profit, margin,
+    jobDays,
+  };
+
+  return lastResult;
+}
+
+// ============================================================
+// CABINETS — RENDER RESULTS
+// ============================================================
+function renderCabinetResults() {
+  if (!lastResult) { calculateCabinets(); }
+  if (!lastResult) return;
+
+  document.getElementById('results-empty').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  const r = lastResult;
+  const clientName = document.getElementById('clientName').value || 'Client';
+  const address = document.getElementById('clientAddress').value || '';
+  const date = document.getElementById('estDate').value;
+
+  document.getElementById('r-price').textContent = '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('r-client-sub').textContent = clientName + (address ? ' — ' + address : '') + ' | ' + date + ' | CABINETS';
+
+  // Pieces summary
+  let surfHTML = '';
+  surfHTML += '<div class="breakdown-row"><span class="label">🗄️ Upper Doors</span><span class="val">' + r.upperDoors + '</span></div>';
+  surfHTML += '<div class="breakdown-row"><span class="label">🗄️ Lower Doors</span><span class="val">' + r.lowerDoors + '</span></div>';
+  surfHTML += '<div class="breakdown-row"><span class="label">🗃️ Drawer Fronts</span><span class="val">' + r.drawers + '</span></div>';
+  if (r.panels > 0) surfHTML += '<div class="breakdown-row"><span class="label">📋 Panels/Fillers</span><span class="val">' + r.panels + '</span></div>';
+  surfHTML += '<div class="breakdown-row" style="background:#e8f5e9;border-radius:6px;font-weight:700"><span class="label">Total Pieces</span><span class="val">' + r.totalPieces + '</span></div>';
+  document.getElementById('r-surfaces').innerHTML = surfHTML;
+
+  // Hours — for cabinets we show sub cost breakdown instead
+  let hoursHTML = '';
+  hoursHTML += '<div class="breakdown-row"><span class="label">🔧 Prep Level</span><span class="val">' + r.cabPrepLevel.charAt(0).toUpperCase() + r.cabPrepLevel.slice(1) + '</span></div>';
+  hoursHTML += '<div class="breakdown-row"><span class="label">💵 Rate per Piece</span><span class="val">' + fmt(r.tierRate) + '</span></div>';
+  hoursHTML += '<div class="breakdown-row"><span class="label">🧮 Pieces × Rate</span><span class="val">' + fmt(r.subPieceTotal) + '</span></div>';
+  if (r.subCost > r.subPieceTotal) hoursHTML += '<div class="breakdown-row" style="background:#fff3e0;border-radius:6px"><span class="label">⬆️ Minimum Applied</span><span class="val">' + fmt(r.subMinimum) + '</span></div>';
+  if (r.twoColor) hoursHTML += '<div class="breakdown-row"><span class="label">🎨 Two-color</span><span class="val">+ ' + fmt(CAB_ADDONS.twoColor) + '</span></div>';
+  if (r.newConst) hoursHTML += '<div class="breakdown-row"><span class="label">🏗️ New Construction</span><span class="val">+ ' + fmt(CAB_ADDONS.newConstruction) + '</span></div>';
+  if (r.prevPainted) hoursHTML += '<div class="breakdown-row"><span class="label">🔄 Prev. Painted</span><span class="val">+ ' + fmt(CAB_ADDONS.prevPainted) + '</span></div>';
+  hoursHTML += '<div class="breakdown-row" style="background:#e8f5e9;border-radius:6px;font-weight:700"><span class="label">Total Sub Cost</span><span class="val">' + fmt(r.totalSubCost) + '</span></div>';
+  document.getElementById('r-hours').innerHTML = hoursHTML;
+
+  // Materials
+  let matHTML = '';
+  if (r.paintGals > 0) matHTML += '<div class="breakdown-row"><span class="label">🎨 ' + r.paintName + '</span><span class="val">' + r.paintGals + ' gal × ' + fmt(r.paintPrice) + ' = ' + fmt(r.paintMatCost) + '</span></div>';
+  if (r.primerGals > 0) matHTML += '<div class="breakdown-row"><span class="label">🪣 ' + r.primerName + '</span><span class="val">' + r.primerGals + ' gal × ' + fmt(r.primerPrice) + ' = ' + fmt(r.primerMatCost) + '</span></div>';
+  matHTML += '<div class="breakdown-row"><span class="label">SW Base</span><span class="val">' + fmt(r.totalMatBase) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="background:#f0fff4;border-radius:6px"><span class="label">↳ Markup ' + Math.round(r.cabMatMarkup * 100) + '%</span><span class="val green">+ ' + fmt(r.totalMatMarkup) + '</span></div>';
+  document.getElementById('r-materials').innerHTML = matHTML;
+
+  // Financials
+  document.getElementById('r-financials').innerHTML =
+    '<div class="result-row"><div class="result-label">Sub Cost (labor)</div><div class="result-value">' + fmt(r.totalSubCost) + '</div></div>' +
+    '<div class="result-row"><div class="result-label">Materials (paint + markup)</div><div class="result-value">' + fmt(r.totalMaterials) + '</div></div>' +
+    '<div class="result-row"><div class="result-label">Overhead ' + Math.round(r.cabOverheadPct * 100) + '%</div><div class="result-value">' + fmt(r.overheadAmt) + '</div></div>' +
+    '<div class="result-row"><div class="result-label"><strong>Total Cost</strong></div><div class="result-value">' + fmt(r.totalCost) + '</div></div>' +
+    '<div class="result-row" style="background:#e8f5e9;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Gross Profit</strong><small>Revenue − Sub − Materials</small></div><div class="result-value green">' + fmt(r.grossProfit) + ' (' + Math.round((r.grossProfit / r.price) * 100) + '%)</div></div>' +
+    '<div class="result-row" style="background:#fff3e0;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Net Profit</strong><small>Gross − Overhead</small></div><div class="result-value" style="color:#e65100">' + fmt(r.profit) + ' (' + Math.round(r.margin * 100) + '%)</div></div>' +
+    '<div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;"><div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div><div class="result-value gold">' + '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</div></div>' +
+    '<div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">' +
+      '🗄️ ' + r.totalPieces + ' pieces &nbsp;|&nbsp; ' + fmt(r.price / r.totalPieces) + '/piece to client &nbsp;|&nbsp; 📅 ~' + r.jobDays + ' days' +
     '</div>';
 }
 
