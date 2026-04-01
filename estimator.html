@@ -169,7 +169,7 @@
   <div>
     <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
   </div>
-  <div class="badge">Estimator v1.4</div>
+  <div class="badge">Estimator v1.5</div>
 </header>
 
 <main>
@@ -391,16 +391,251 @@
       </button>
     </div>
 
-    <!-- EXTERIOR (placeholder) -->
+    <!-- EXTERIOR -->
     <div id="section-exterior" style="display:none">
+      <!-- HOUSE MEASUREMENTS -->
       <div class="card">
+        <div class="card-header"><span class="icon">📐</span> House Measurements</div>
         <div class="card-body">
-          <div class="empty-state">
-            <div class="icon">🏡</div>
-            <p><strong>Exterior coming in v2</strong><br>Switch to Interior for now.</p>
+          <div id="ext-sides-container">
+            <div class="empty-state">
+              <div class="icon">🏡</div>
+              <p>No sides added yet.<br>Tap below to add house sections.</p>
+            </div>
+          </div>
+          <div id="ext-sides-summary" style="display:none" class="rooms-summary"></div>
+        </div>
+        <div style="padding: 0 18px 18px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="addExtSide('Front')">+ Front</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Back')">+ Back</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Left Side')">+ Left Side</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Right Side')">+ Right Side</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Garage')">+ Garage</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Gable/Attic')">+ Gable</button>
+          <button class="btn btn-outline btn-sm" onclick="addExtSide('Other')">+ Other</button>
+        </div>
+      </div>
+
+      <!-- SCOPE & PREP -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🔧</span> Scope & Prep</div>
+        <div class="card-body">
+          <div class="section-label">Prep Condition</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="extPrepSelector">
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrep('light', this)">
+              Light<br><span style="font-size:10px;color:var(--text-light)">80 SF/HR<br>Good shape</span>
+            </div>
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setExtPrep('medium', this)">
+              Medium<br><span style="font-size:10px;color:var(--text-light)">45 SF/HR<br>Partial peel</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrep('heavy', this)">
+              Heavy<br><span style="font-size:10px;color:var(--text-light)">25 SF/HR<br>Severe peel</span>
+            </div>
+          </div>
+
+          <div class="section-label">Prep Coverage</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div style="font-size:13px;color:var(--text-light);">% of siding that needs prep</div>
+            <div class="markup-val" id="extPrepPctDisplay">70%</div>
+          </div>
+          <input type="range" id="extPrepPctSlider" min="0" max="100" value="70" step="5" oninput="updateExtPrepPct()">
+          <div class="margin-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Application Method</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="extMethodSelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setExtMethod('spray', this)">
+              Spray<br><span style="font-size:10px;color:var(--text-light)">350 SF/HR</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtMethod('spray_back', this)">
+              Spray+Back<br><span style="font-size:10px;color:var(--text-light)">200 SF/HR</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtMethod('brush', this)">
+              Brush/Roll<br><span style="font-size:10px;color:var(--text-light)">120 SF/HR</span>
+            </div>
+          </div>
+
+          <div class="section-label">Coats of Paint</div>
+          <div class="coats-selector" style="margin-bottom:14px" id="extCoatsSelector">
+            <div class="coat-btn" onclick="setExtCoats(1, this)">1 Coat</div>
+            <div class="coat-btn active" onclick="setExtCoats(2, this)">2 Coats</div>
+            <div class="coat-btn" onclick="setExtCoats(3, this)">3 Coats</div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Primer</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px" id="extPrimerSelector">
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrimer('none', this)">
+              No Primer
+            </div>
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setExtPrimer('spot', this)">
+              Spot Prime<br><span style="font-size:10px;color:var(--text-light)">Brush 120 SF/HR</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrimer('full', this)">
+              Full Prime<br><span style="font-size:10px;color:var(--text-light)">Spray 300 SF/HR</span>
+            </div>
+          </div>
+          <div id="ext-primer-pct-row">
+            <div class="markup-row" style="margin-bottom:6px">
+              <div style="font-size:13px;color:var(--text-light);">% of siding to prime</div>
+              <div class="markup-val" id="extPrimerPctDisplay">40%</div>
+            </div>
+            <input type="range" id="extPrimerPctSlider" min="0" max="100" value="40" step="5" oninput="updateExtPrimerPct()">
+            <div class="margin-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
           </div>
         </div>
       </div>
+
+      <!-- DOORS & TRIM -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🚪</span> Doors & Trim</div>
+        <div class="card-body">
+          <div class="section-label">Exterior Doors</div>
+          <div class="form-grid thirds" style="margin-bottom:14px">
+            <div class="field">
+              <label>Entry Doors</label>
+              <input type="number" id="extDoorsEntry" value="1" min="0" onchange="calculateExterior()">
+            </div>
+            <div class="field">
+              <label>Garage Doors</label>
+              <input type="number" id="extDoorsGarage" value="1" min="0" onchange="calculateExterior()">
+            </div>
+            <div class="field">
+              <label>Side/Back Doors</label>
+              <input type="number" id="extDoorsSide" value="1" min="0" onchange="calculateExterior()">
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="section-label">Trim / Fascia / Soffits</div>
+          <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
+            <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;">
+              <input type="checkbox" id="extIncludeTrim" onchange="toggleExtTrim()" style="width:18px;height:18px;accent-color:var(--gold)">
+              Include Trim / Fascia / Soffits
+            </label>
+          </div>
+          <div id="ext-trim-options" style="display:none">
+            <div class="form-grid">
+              <div class="field">
+                <label>Total Trim SF</label>
+                <input type="number" id="extTrimSF" value="" min="0" placeholder="e.g. 200" onchange="calculateExterior()">
+              </div>
+            </div>
+            <div style="font-size:11px;color:var(--text-light);margin-top:6px;">Fascia: LF x 0.5ft = SF | Soffits: LF x 1.5ft = SF</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINT SELECTION -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🎨</span> Paint Selection</div>
+        <div class="card-body">
+          <div class="section-label">Siding Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="extPaintSiding" onchange="calculateExterior()">
+              <option value="34.95|A-100 Exterior Latex">A-100 Exterior Latex (Contractor) — $34.95/gal</option>
+              <option value="44.95|SuperPaint Exterior">SuperPaint Exterior — $44.95/gal</option>
+              <option value="49.95|Resilience Exterior">Resilience Exterior — $49.95/gal</option>
+              <option value="55.95|Duration Exterior" selected>Duration Exterior — $55.95/gal</option>
+              <option value="65.95|Emerald Exterior">Emerald Exterior — $65.95/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Trim Paint</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="extPaintTrimProduct" onchange="calculateExterior()">
+              <option value="49.95|ProClassic Enamel">ProClassic Waterborne Enamel — $49.95/gal</option>
+              <option value="61.95|Emerald Urethane Trim">Emerald Urethane Trim — $61.95/gal</option>
+            </select>
+          </div>
+
+          <div class="section-label">Primer Product</div>
+          <div class="field" style="margin-bottom:14px">
+            <select id="extPrimerProduct" onchange="calculateExterior()">
+              <option value="30.95|Extreme Block Primer" selected>Extreme Block Primer — $30.95/gal</option>
+              <option value="38.45|Multi-Purpose Primer">Multi-Purpose Primer — $38.45/gal</option>
+              <option value="44.95|Loxon Conditioner">Loxon Conditioner — $44.95/gal</option>
+              <option value="61.95|Extreme Bond Primer">Extreme Bond Primer — $61.95/gal</option>
+            </select>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Paint Markup</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Markup sobre materiales</div>
+              <div style="font-size:11px;color:var(--text-light);">Cubre pickup, desperdicio, manejo</div>
+            </div>
+            <div class="markup-val" id="extMarkupDisplay">15%</div>
+          </div>
+          <input type="range" id="extMarkupSlider" min="0" max="30" value="15" oninput="updateExtMarkup()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>15%</span><span>20%</span><span>30%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Job Supplies</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Tape, plastic, caulk, drop cloths</div>
+              <div style="font-size:11px;color:var(--text-light);">% del costo SW de pintura</div>
+            </div>
+            <div class="markup-val" id="extSuppliesDisplay">10%</div>
+          </div>
+          <input type="range" id="extSuppliesSlider" min="0" max="40" value="10" oninput="updateExtSupplies()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span></div>
+        </div>
+      </div>
+
+      <!-- JOB SETTINGS -->
+      <div class="card">
+        <div class="card-header"><span class="icon">👷</span> Job Settings</div>
+        <div class="card-body">
+          <div class="section-label">Height / Access</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="extHeightSelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setExtHeight(1.0, this)">
+              1-Story<br><span style="font-size:10px;color:var(--text-light)">Ground level</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtHeight(1.3, this)">
+              2-Story<br><span style="font-size:10px;color:var(--text-light)">Ladders</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtHeight(1.7, this)">
+              3-Story<br><span style="font-size:10px;color:var(--text-light)">Scaffold</span>
+            </div>
+          </div>
+
+          <div class="section-label">Number of Painters</div>
+          <div class="painters-row" style="margin-bottom:18px">
+            <button class="painter-btn" onclick="changeExtPainters(-1)">&#8722;</button>
+            <div class="painter-count" id="extPaintersCount">2</div>
+            <button class="painter-btn" onclick="changeExtPainters(1)">+</button>
+            <div style="font-size:13px; color:var(--text-light); margin-left:6px;">@ $30.00/hr each</div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Overhead % del precio</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Cubre operaciones del negocio</div>
+            </div>
+            <div class="markup-val" id="extOverheadDisplay" style="color:var(--dark3)">15%</div>
+          </div>
+          <input type="range" id="extOverheadSlider" min="10" max="25" value="15" oninput="updateExtOverhead()">
+          <div class="margin-labels"><span>10%</span><span>13%</span><span>15%</span><span>20%</span><span>25%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Desired Profit Margin</div>
+          <div class="margin-display">
+            <span id="extMarginDisplay">40%</span>
+            <span>profit margin</span>
+          </div>
+          <input type="range" id="extMarginSlider" min="20" max="60" value="40" oninput="updateExtMargin()">
+          <div class="margin-labels">
+            <span>20%</span><span>30%</span><span style="color:var(--gold);font-weight:700">40%</span><span style="color:var(--green);font-weight:700">50%</span><span>60%</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold btn-full" style="font-size:16px; padding:16px;" onclick="showResults()">
+        Calculate Exterior Estimate →
+      </button>
     </div>
 
     <!-- CABINETS (placeholder) -->
@@ -526,6 +761,49 @@ let numPainters = 1;
 let numCoats = 1;
 let jobType = 'interior';
 let lastResult = null;
+
+// EXTERIOR STATE
+let extSides = [];
+let extSideCounter = 0;
+let extPrepLevel = 'medium';
+let extPrepPct = 0.70;
+let extPrimerType = 'spot';
+let extPrimerPct = 0.40;
+let extMethod = 'spray';
+let extCoats = 2;
+let extHeightFactor = 1.0;
+let extNumPainters = 2;
+let extMatMarkup = 0.15;
+let extJobSuppliesPct = 0.10;
+let extOverheadPct = 0.15;
+
+// Exterior Production Rates (calibrated from Foster St real job data)
+const EXT_RATES = {
+  power_wash: 400,        // SF/HR
+  prep_light: 80,         // SF/HR — good shape, light sand
+  prep_medium: 45,        // SF/HR — partial peeling, patching
+  prep_heavy: 25,         // SF/HR — severe peeling, orbital sanding
+  primer_spot: 120,       // SF/HR — brush, bare spots
+  primer_full: 300,       // SF/HR — spray, full coverage
+  siding_spray_1st: 350,  // SF/HR — spray 1st coat
+  siding_spray_add: 450,  // SF/HR — spray additional coats
+  siding_spray_back_1st: 200,  // SF/HR — spray + back-brush
+  siding_spray_back_add: 275,
+  siding_brush_1st: 120,  // SF/HR — brush/roll only
+  siding_brush_add: 160,
+  trim_brush_1st: 60,     // SF/HR — trim/fascia brush
+  trim_brush_add: 80,
+  door_entry: 1.5,        // hours per door (2 coats)
+  door_garage: 3.0,
+  door_side: 1.5,
+  setup_factor: 0.15,     // 15% buffer
+};
+
+const EXT_COVERAGE = {
+  siding: 350,   // SF per gallon
+  trim: 350,
+  primer: 300,
+};
 
 // ============================================================
 // INIT
@@ -811,6 +1089,7 @@ function renderRooms() {
 // CALCULATE
 // ============================================================
 function calculate() {
+  if (jobType === 'exterior') return calculateExterior();
   if (rooms.length === 0) {
     document.getElementById('preview-price').textContent = '—';
     return;
@@ -1013,6 +1292,7 @@ function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','
 function fmtN(n) { return n.toFixed(1); }
 
 function renderResults() {
+  if (jobType === 'exterior') return renderExteriorResults();
   if (!lastResult) { calculate(); }
   if (!lastResult) return;
 
@@ -1115,6 +1395,413 @@ function renderResults() {
       📅 ~${r.jobDays} day${r.jobDays>1?'s':''}
     </div>
   `;
+}
+
+// ============================================================
+// EXTERIOR — SIDES MANAGEMENT
+// ============================================================
+function addExtSide(name) {
+  const id = ++extSideCounter;
+  extSides.push({ id, name, w: '', h: '' });
+  renderExtSides();
+  setTimeout(() => toggleExtSide(id), 50);
+}
+
+function removeExtSide(id) {
+  extSides = extSides.filter(s => s.id !== id);
+  renderExtSides();
+  calculateExterior();
+}
+
+function toggleExtSide(id) {
+  const body = document.getElementById('ext-side-body-' + id);
+  const toggle = document.getElementById('ext-side-toggle-' + id);
+  if (body) {
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+  }
+}
+
+function updateExtSideField(id, field, value) {
+  const side = extSides.find(s => s.id === id);
+  if (side) {
+    side[field] = field === 'name' ? value : (parseFloat(value) || 0);
+    const nameEl = document.getElementById('ext-side-name-' + id);
+    if (nameEl && field === 'name') nameEl.textContent = value || 'Side';
+    const sfEl = document.getElementById('ext-side-sf-' + id);
+    if (sfEl) {
+      const sf = (parseFloat(side.w) || 0) * (parseFloat(side.h) || 0);
+      sfEl.textContent = sf > 0 ? sf.toFixed(0) + ' SF' : '';
+    }
+    calculateExterior();
+  }
+}
+
+function renderExtSides() {
+  const container = document.getElementById('ext-sides-container');
+  if (extSides.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🏡</div><p>No sides added yet.<br>Tap below to add house sections.</p></div>';
+    document.getElementById('ext-sides-summary').style.display = 'none';
+    return;
+  }
+  container.innerHTML = extSides.map(side => {
+    const sf = (parseFloat(side.w) || 0) * (parseFloat(side.h) || 0);
+    return '<div class="room-card">' +
+      '<div class="room-header" onclick="toggleExtSide(' + side.id + ')">' +
+        '<div><div class="room-name" id="ext-side-name-' + side.id + '">' + side.name + '</div>' +
+        '<div class="room-sf" id="ext-side-sf-' + side.id + '">' + (sf > 0 ? sf.toFixed(0) + ' SF' : '') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeExtSide(' + side.id + ')">✕</button>' +
+          '<div class="room-toggle" id="ext-side-toggle-' + side.id + '">▾</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="room-body" id="ext-side-body-' + side.id + '">' +
+        '<div class="form-grid full" style="margin-bottom:12px"><div class="field"><label>Section Name</label>' +
+          '<input type="text" value="' + side.name + '" onchange="updateExtSideField(' + side.id + ', \'name\', this.value)"></div></div>' +
+        '<div class="form-grid" style="margin-bottom:8px">' +
+          '<div class="field"><label>Width (ft)</label><input type="number" value="' + side.w + '" placeholder="e.g. 40" onchange="updateExtSideField(' + side.id + ', \'w\', this.value)"></div>' +
+          '<div class="field"><label>Height (ft)</label><input type="number" value="' + side.h + '" placeholder="e.g. 12" onchange="updateExtSideField(' + side.id + ', \'h\', this.value)"></div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateExtSidesSummary() {
+  if (extSides.length === 0) return;
+  const summary = document.getElementById('ext-sides-summary');
+  let totalSF = 0;
+  extSides.forEach(s => { totalSF += (parseFloat(s.w) || 0) * (parseFloat(s.h) || 0); });
+  summary.style.display = 'block';
+  summary.innerHTML = '<div style="font-size:12px; font-weight:700; color:var(--text-light); margin-bottom:6px; text-transform:uppercase;">Total Siding SF</div>' +
+    extSides.map(s => {
+      const sf = (parseFloat(s.w) || 0) * (parseFloat(s.h) || 0);
+      return '<div class="rooms-summary-row"><span class="surface">' + s.name + '</span><span class="sf">' + sf.toFixed(0) + ' SF</span></div>';
+    }).join('') +
+    '<div class="rooms-summary-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span style="font-weight:700">Total Siding</span><span class="sf" style="color:var(--gold);font-size:15px">' + totalSF.toFixed(0) + ' SF</span></div>';
+}
+
+// ============================================================
+// EXTERIOR — CONTROLS
+// ============================================================
+function setExtPrep(level, el) {
+  extPrepLevel = level;
+  document.querySelectorAll('#extPrepSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const defaults = { light: 30, medium: 70, heavy: 100 };
+  document.getElementById('extPrepPctSlider').value = defaults[level];
+  extPrepPct = defaults[level] / 100;
+  document.getElementById('extPrepPctDisplay').textContent = defaults[level] + '%';
+  calculateExterior();
+}
+
+function updateExtPrepPct() {
+  const v = document.getElementById('extPrepPctSlider').value;
+  extPrepPct = parseInt(v) / 100;
+  document.getElementById('extPrepPctDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function setExtPrimer(type, el) {
+  extPrimerType = type;
+  document.querySelectorAll('#extPrimerSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const row = document.getElementById('ext-primer-pct-row');
+  if (type === 'none') {
+    row.style.display = 'none';
+  } else {
+    row.style.display = 'block';
+    const pct = type === 'spot' ? 40 : 100;
+    document.getElementById('extPrimerPctSlider').value = pct;
+    extPrimerPct = pct / 100;
+    document.getElementById('extPrimerPctDisplay').textContent = pct + '%';
+  }
+  calculateExterior();
+}
+
+function updateExtPrimerPct() {
+  const v = document.getElementById('extPrimerPctSlider').value;
+  extPrimerPct = parseInt(v) / 100;
+  document.getElementById('extPrimerPctDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function setExtMethod(method, el) {
+  extMethod = method;
+  document.querySelectorAll('#extMethodSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculateExterior();
+}
+
+function setExtCoats(n, el) {
+  extCoats = n;
+  document.querySelectorAll('#extCoatsSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculateExterior();
+}
+
+function setExtHeight(factor, el) {
+  extHeightFactor = factor;
+  document.querySelectorAll('#extHeightSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculateExterior();
+}
+
+function changeExtPainters(delta) {
+  extNumPainters = Math.max(1, Math.min(10, extNumPainters + delta));
+  document.getElementById('extPaintersCount').textContent = extNumPainters;
+  calculateExterior();
+}
+
+function toggleExtTrim() {
+  const checked = document.getElementById('extIncludeTrim').checked;
+  document.getElementById('ext-trim-options').style.display = checked ? 'block' : 'none';
+  calculateExterior();
+}
+
+function updateExtMarkup() {
+  const v = document.getElementById('extMarkupSlider').value;
+  extMatMarkup = parseInt(v) / 100;
+  document.getElementById('extMarkupDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function updateExtSupplies() {
+  const v = document.getElementById('extSuppliesSlider').value;
+  extJobSuppliesPct = parseInt(v) / 100;
+  document.getElementById('extSuppliesDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function updateExtOverhead() {
+  const v = document.getElementById('extOverheadSlider').value;
+  extOverheadPct = parseInt(v) / 100;
+  document.getElementById('extOverheadDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function updateExtMargin() {
+  const v = document.getElementById('extMarginSlider').value;
+  document.getElementById('extMarginDisplay').textContent = v + '%';
+  calculateExterior();
+}
+
+function getMaskingHours(totalSF) {
+  if (totalSF <= 1500) return 4;
+  if (totalSF <= 3000) return 6;
+  return 8;
+}
+
+// ============================================================
+// EXTERIOR — CALCULATE
+// ============================================================
+function calculateExterior() {
+  let totalSidingSF = 0;
+  extSides.forEach(s => {
+    totalSidingSF += (parseFloat(s.w) || 0) * (parseFloat(s.h) || 0);
+  });
+
+  if (totalSidingSF === 0) {
+    document.getElementById('preview-price').textContent = '—';
+    lastResult = null;
+    return;
+  }
+
+  const includeTrim = document.getElementById('extIncludeTrim').checked;
+  const trimSF = includeTrim ? (parseFloat(document.getElementById('extTrimSF').value) || 0) : 0;
+
+  const doorsEntry = parseInt(document.getElementById('extDoorsEntry').value) || 0;
+  const doorsGarage = parseInt(document.getElementById('extDoorsGarage').value) || 0;
+  const doorsSide = parseInt(document.getElementById('extDoorsSide').value) || 0;
+
+  // ---- LABOR HOURS ----
+  // 1. Power wash
+  const pwHours = totalSidingSF / EXT_RATES.power_wash;
+
+  // 2. Prep (scraping/sanding)
+  const prepSF = totalSidingSF * extPrepPct;
+  const prepRate = EXT_RATES['prep_' + extPrepLevel];
+  const prepHours = prepSF / prepRate;
+
+  // 3. Masking
+  const maskHours = getMaskingHours(totalSidingSF);
+
+  // 4. Primer
+  let primerHours = 0;
+  let primerSF = 0;
+  if (extPrimerType !== 'none') {
+    primerSF = totalSidingSF * extPrimerPct;
+    const primerRate = extPrimerType === 'spot' ? EXT_RATES.primer_spot : EXT_RATES.primer_full;
+    primerHours = primerSF / primerRate;
+  }
+
+  // 5. Siding painting
+  const methodKey = extMethod === 'spray' ? 'siding_spray' : extMethod === 'spray_back' ? 'siding_spray_back' : 'siding_brush';
+  const paintRate1st = EXT_RATES[methodKey + '_1st'];
+  const paintRateAdd = EXT_RATES[methodKey + '_add'];
+  let sidingPaintHours = totalSidingSF / paintRate1st;
+  if (extCoats > 1) sidingPaintHours += totalSidingSF * (extCoats - 1) / paintRateAdd;
+
+  // 6. Trim painting (brush)
+  let trimPaintHours = 0;
+  if (trimSF > 0) {
+    trimPaintHours = trimSF / EXT_RATES.trim_brush_1st;
+    if (extCoats > 1) trimPaintHours += trimSF * (extCoats - 1) / EXT_RATES.trim_brush_add;
+  }
+
+  // 7. Doors
+  const doorHours = (doorsEntry * EXT_RATES.door_entry) + (doorsGarage * EXT_RATES.door_garage) + (doorsSide * EXT_RATES.door_side);
+
+  // Apply height factor and buffer
+  const productionHours = (pwHours + prepHours + maskHours + primerHours + sidingPaintHours + trimPaintHours + doorHours) * extHeightFactor;
+  const setupHours = productionHours * EXT_RATES.setup_factor;
+  const totalHours = productionHours + setupHours;
+  const laborCost = totalHours * PAINTER_RATE;
+
+  const hoursPerDay = 8 * extNumPainters;
+  const jobDays = Math.ceil(totalHours / hoursPerDay);
+
+  // ---- MATERIALS ----
+  const [sidingPriceStr, sidingName] = document.getElementById('extPaintSiding').value.split('|');
+  const sidingPrice = parseFloat(sidingPriceStr);
+  const [trimPriceStr, trimPaintName] = document.getElementById('extPaintTrimProduct').value.split('|');
+  const trimPrice = parseFloat(trimPriceStr);
+  const [primerPriceStr, primerName] = document.getElementById('extPrimerProduct').value.split('|');
+  const primerPrice = parseFloat(primerPriceStr);
+
+  const sidingCoatSF = totalSidingSF * extCoats;
+  const sidingGals = Math.ceil(sidingCoatSF / EXT_COVERAGE.siding * 1.10);
+  const trimCoatSF = trimSF * extCoats;
+  const trimGals = trimSF > 0 ? Math.ceil(trimCoatSF / EXT_COVERAGE.trim * 1.10) : 0;
+  const primerGals = primerSF > 0 ? Math.ceil(primerSF / EXT_COVERAGE.primer * 1.10) : 0;
+
+  const sidingMatCost = sidingGals * sidingPrice;
+  const trimMatCost = trimGals * trimPrice;
+  const primerMatCost = primerGals * primerPrice;
+  const totalMatBase = sidingMatCost + trimMatCost + primerMatCost;
+  const totalMatMarkup = totalMatBase * extMatMarkup;
+  const jobSupplies = totalMatBase * extJobSuppliesPct;
+  const totalMaterials = totalMatBase + totalMatMarkup + jobSupplies;
+
+  // ---- FINANCIALS ----
+  const margin = parseInt(document.getElementById('extMarginSlider').value) / 100;
+  const directCost = laborCost + totalMaterials;
+  const price = directCost / (1 - margin - extOverheadPct);
+  const overheadAmt = price * extOverheadPct;
+  const totalCost = directCost + overheadAmt;
+  const profit = price - totalCost;
+
+  document.getElementById('preview-price').textContent = '$' + price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  lastResult = {
+    jobType: 'exterior',
+    totalSidingSF, trimSF, prepSF, primerSF,
+    doorsEntry, doorsGarage, doorsSide,
+    pwHours, prepHours, maskHours, primerHours, sidingPaintHours, trimPaintHours, doorHours,
+    productionHours, setupHours, totalHours,
+    laborCost, jobDays,
+    sidingGals, sidingName, sidingPrice, sidingMatCost,
+    trimGals, trimPaintName, trimPrice, trimMatCost,
+    primerGals, primerName, primerPrice, primerMatCost,
+    extPrimerType,
+    totalMatBase, totalMatMarkup, jobSupplies, extJobSuppliesPct, totalMaterials,
+    directCost, overheadAmt, extOverheadPct,
+    grossProfit: price - directCost,
+    totalCost, price, profit, margin,
+    extMatMarkup,
+    extNumPainters, extCoats, extHeightFactor,
+    extPrepLevel, extPrepPct, extMethod,
+    includeTrim,
+  };
+
+  updateExtSidesSummary();
+  return lastResult;
+}
+
+// ============================================================
+// EXTERIOR — RENDER RESULTS
+// ============================================================
+function renderExteriorResults() {
+  if (!lastResult) { calculateExterior(); }
+  if (!lastResult) return;
+
+  document.getElementById('results-empty').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  const r = lastResult;
+  const clientName = document.getElementById('clientName').value || 'Client';
+  const address = document.getElementById('clientAddress').value || '';
+  const date = document.getElementById('estDate').value;
+
+  document.getElementById('r-price').textContent = '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('r-client-sub').textContent = clientName + (address ? ' — ' + address : '') + ' | ' + date + ' | EXTERIOR';
+
+  // Surfaces
+  let surfHTML = '';
+  surfHTML += '<div class="breakdown-row"><span class="label">🏡 Siding</span><span class="val">' + r.totalSidingSF.toFixed(0) + ' SF</span></div>';
+  if (r.prepSF > 0) surfHTML += '<div class="breakdown-row"><span class="label">🪚 Prep Area (' + Math.round(r.extPrepPct*100) + '%)</span><span class="val">' + r.prepSF.toFixed(0) + ' SF</span></div>';
+  if (r.primerSF > 0) surfHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (' + r.extPrimerType + ')</span><span class="val">' + r.primerSF.toFixed(0) + ' SF</span></div>';
+  if (r.trimSF > 0) surfHTML += '<div class="breakdown-row"><span class="label">📏 Trim/Fascia</span><span class="val">' + r.trimSF.toFixed(0) + ' SF</span></div>';
+  if (r.doorsEntry > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚪 Entry Doors</span><span class="val">' + r.doorsEntry + '</span></div>';
+  if (r.doorsGarage > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚗 Garage Doors</span><span class="val">' + r.doorsGarage + '</span></div>';
+  if (r.doorsSide > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚪 Side/Back Doors</span><span class="val">' + r.doorsSide + '</span></div>';
+  document.getElementById('r-surfaces').innerHTML = surfHTML;
+
+  // Labor
+  const heightLabel = r.extHeightFactor === 1.0 ? '1-Story' : r.extHeightFactor === 1.3 ? '2-Story' : '3-Story';
+  const methodLabel = r.extMethod === 'spray' ? 'Spray' : r.extMethod === 'spray_back' ? 'Spray+Back' : 'Brush/Roll';
+  const prepLabel = r.extPrepLevel === 'light' ? 'Light' : r.extPrepLevel === 'medium' ? 'Medium' : 'Heavy';
+
+  document.getElementById('r-labor').innerHTML =
+    '<div class="breakdown-row" style="background:#fff8e8"><span class="label">Height/Access</span><span class="val" style="color:var(--gold)">' + heightLabel + ' (×' + r.extHeightFactor + ')</span></div>' +
+    '<div class="breakdown-row"><span class="label">💦 Power Wash</span><span class="val">' + fmtN(r.pwHours * r.extHeightFactor) + ' hrs</span></div>' +
+    '<div class="breakdown-row"><span class="label">🪚 Prep — ' + prepLabel + ' (' + Math.round(r.extPrepPct*100) + '%)</span><span class="val">' + fmtN(r.prepHours * r.extHeightFactor) + ' hrs</span></div>' +
+    '<div class="breakdown-row"><span class="label">🎭 Masking</span><span class="val">' + fmtN(r.maskHours * r.extHeightFactor) + ' hrs</span></div>' +
+    (r.primerHours > 0 ? '<div class="breakdown-row"><span class="label">🪣 Primer (' + r.extPrimerType + ')</span><span class="val">' + fmtN(r.primerHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
+    '<div class="breakdown-row"><span class="label">🎨 Paint — ' + methodLabel + ' × ' + r.extCoats + ' coats</span><span class="val">' + fmtN(r.sidingPaintHours * r.extHeightFactor) + ' hrs</span></div>' +
+    (r.trimPaintHours > 0 ? '<div class="breakdown-row"><span class="label">📏 Trim Paint</span><span class="val">' + fmtN(r.trimPaintHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
+    (r.doorHours > 0 ? '<div class="breakdown-row"><span class="label">🚪 Doors</span><span class="val">' + fmtN(r.doorHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
+    '<div class="breakdown-row"><span class="label">Setup & cleanup (15%)</span><span class="val">' + fmtN(r.setupHours) + ' hrs</span></div>' +
+    '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span class="label" style="font-weight:700">Total hours on job</span><span class="val" style="font-weight:700">' + fmtN(r.totalHours) + ' hrs</span></div>' +
+    '<div class="breakdown-row"><span class="label">Job duration (' + r.extNumPainters + ' painter' + (r.extNumPainters>1?'s':'') + ')</span><span class="val">' + r.jobDays + ' day' + (r.jobDays>1?'s':'') + '</span></div>' +
+    '<div class="breakdown-row"><span class="label">Labor cost @ $30/hr</span><span class="val" style="color:var(--dark)">' + fmt(r.laborCost) + '</span></div>';
+
+  // Painter pay
+  const hoursPerPainter = r.totalHours / r.extNumPainters;
+  const payPerPainter = hoursPerPainter * PAINTER_RATE;
+  let painterHTML = '<div class="title">💵 Painter Pay Breakdown</div>';
+  for (let i = 1; i <= r.extNumPainters; i++) {
+    painterHTML += '<div class="breakdown-row"><span class="label">Painter ' + i + '</span><span class="val" style="color:var(--green)">' + fmtN(hoursPerPainter) + ' hrs × $30 = ' + fmt(payPerPainter) + '</span></div>';
+  }
+  painterHTML += '<div class="breakdown-row" style="border-top:1px solid #a8e6bf; margin-top:4px; padding-top:8px;"><span class="label" style="font-weight:700">Total Painter Pay</span><span class="val" style="color:var(--green); font-size:15px">' + fmt(r.laborCost) + '</span></div>';
+  document.getElementById('r-painter-pay').innerHTML = painterHTML;
+
+  // Materials
+  let matHTML = '';
+  if (r.primerGals > 0) matHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">' + r.primerName + '</span><span class="val">' + r.primerGals + ' gal — ' + fmt(r.primerMatCost) + '</span></div>';
+  matHTML += '<div class="breakdown-row"><span class="label">' + r.sidingName + '</span><span class="val">' + r.sidingGals + ' gal — ' + fmt(r.sidingMatCost) + '</span></div>';
+  if (r.trimGals > 0) matHTML += '<div class="breakdown-row"><span class="label">' + r.trimPaintName + ' (trim)</span><span class="val">' + r.trimGals + ' gal — ' + fmt(r.trimMatCost) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:8px;"><span class="label">Subtotal SW Paint</span><span class="val">' + fmt(r.totalMatBase) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="background:#f0fff4"><span class="label" style="color:var(--green)">+ Markup ' + Math.round(r.extMatMarkup*100) + '%</span><span class="val" style="color:var(--green)">' + fmt(r.totalMatMarkup) + '</span></div>';
+  if (r.jobSupplies > 0) matHTML += '<div class="breakdown-row"><span class="label">🧰 Job Supplies ' + Math.round(r.extJobSuppliesPct*100) + '%</span><span class="val">' + fmt(r.jobSupplies) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="border-top:2px solid var(--gold);margin-top:2px;padding-top:8px;"><span class="label" style="font-weight:700">Total Materials</span><span class="val" style="color:var(--dark);font-size:15px">' + fmt(r.totalMaterials) + '</span></div>';
+  document.getElementById('r-materials').innerHTML = matHTML;
+
+  // Financials
+  document.getElementById('r-financials').innerHTML =
+    '<div class="result-row"><div class="result-label">Labor Cost</div><div class="result-value">' + fmt(r.laborCost) + '</div></div>' +
+    '<div class="result-row"><div class="result-label">SW Paint</div><div class="result-value">' + fmt(r.totalMatBase) + '</div></div>' +
+    '<div class="result-row" style="background:#f0fff4;border-radius:6px;padding:10px 8px;"><div class="result-label">↳ Markup materiales <small>' + Math.round(r.extMatMarkup*100) + '%</small></div><div class="result-value green">+ ' + fmt(r.totalMatMarkup) + '</div></div>' +
+    (r.jobSupplies > 0 ? '<div class="result-row"><div class="result-label">Job Supplies ' + Math.round(r.extJobSuppliesPct*100) + '%</div><div class="result-value">' + fmt(r.jobSupplies) + '</div></div>' : '') +
+    '<div class="result-row"><div class="result-label">Overhead ' + Math.round(r.extOverheadPct*100) + '% del job</div><div class="result-value">' + fmt(r.overheadAmt) + '</div></div>' +
+    '<div class="result-row"><div class="result-label"><strong>Total Cost</strong></div><div class="result-value">' + fmt(r.totalCost) + '</div></div>' +
+    '<div class="result-row" style="background:#e8f5e9;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Gross Profit</strong><small>Revenue − Labor − Materials</small></div><div class="result-value green">' + fmt(r.grossProfit) + ' (' + Math.round((r.grossProfit/r.price)*100) + '%)</div></div>' +
+    '<div class="result-row" style="background:#fff3e0;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Net Profit</strong><small>Gross − Overhead</small></div><div class="result-value" style="color:#e65100">' + fmt(r.profit) + ' (' + Math.round(r.margin*100) + '%)</div></div>' +
+    '<div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;"><div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div><div class="result-value gold">' + '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</div></div>' +
+    '<div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">' +
+      '⚡ ' + fmt(r.price/r.totalSidingSF) + '/SF all-in &nbsp;|&nbsp; ⏱ ' + fmtN(r.totalHours) + ' total hrs &nbsp;|&nbsp; 📅 ~' + r.jobDays + ' day' + (r.jobDays>1?'s':'') +
+    '</div>';
 }
 
 // ============================================================
