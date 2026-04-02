@@ -57,7 +57,7 @@
 
   /* JOB TYPE TABS */
   .job-tabs { display: flex; gap: 8px; margin-bottom: 4px; }
-  .job-tab { flex: 1; padding: 12px 8px; border: 2px solid var(--gray2); border-radius: 10px; text-align: center; cursor: pointer; font-weight: 700; font-size: 13px; color: var(--text-light); transition: all 0.2s; background: var(--white); }
+  .job-tab { flex: 1; padding: 10px 6px; border: 2px solid var(--gray2); border-radius: 10px; text-align: center; cursor: pointer; font-weight: 700; font-size: 12px; color: var(--text-light); transition: all 0.2s; background: var(--white); }
   .job-tab.active { border-color: var(--gold); background: #FFF8E8; color: var(--dark); }
   .job-tab .tab-icon { font-size: 20px; display: block; margin-bottom: 3px; }
 
@@ -169,7 +169,7 @@
   <div>
     <div class="logo">Renew<span>Build</span> <span style="color:var(--white);font-weight:400;font-size:16px">Painting</span></div>
   </div>
-  <div class="badge">Estimator v1.6</div>
+  <div class="badge">Estimator v1.7</div>
 </header>
 
 <main>
@@ -224,6 +224,9 @@
           </div>
           <div class="job-tab" onclick="setJobType('cabinets', this)">
             <span class="tab-icon">🗄️</span>Cabinets
+          </div>
+          <div class="job-tab" onclick="setJobType('metal', this)">
+            <span class="tab-icon">🔩</span>Metal
           </div>
         </div>
       </div>
@@ -354,7 +357,7 @@
             <div style="font-size:13px; color:var(--text-light); margin-left:6px;">@ $30.00/hr each</div>
           </div>
 
-          <div class="section-label">Number of Coats — Walls & Ceiling</div>
+          <div class="section-label">Default Coats — New Rooms <small style="color:var(--text-light)">(override per room)</small></div>
           <div class="coats-selector" style="margin-bottom:18px" id="coatsSelector">
             <div class="coat-btn active" onclick="setCoats(1, this)">1 Coat</div>
             <div class="coat-btn" onclick="setCoats(2, this)">2 Coats</div>
@@ -805,6 +808,208 @@
       </button>
     </div>
 
+    <!-- METAL/IRON MODULE -->
+    <div id="section-metal" style="display:none">
+
+      <!-- COMPONENTS -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🔩</span> Metal Components</div>
+        <div class="card-body">
+          <div id="metal-items-container">
+            <div class="empty-state">
+              <div class="icon">🔩</div>
+              <p>No components added yet.<br>Tap below to add metal sections.</p>
+            </div>
+          </div>
+          <div id="metal-items-summary" style="display:none" class="rooms-summary"></div>
+        </div>
+        <div style="padding: 0 18px 18px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="btn btn-gold" onclick="addMetalItem('Fence')">+ Fence</button>
+          <button class="btn btn-outline btn-sm" onclick="addMetalItem('Stairs')">+ Stairs</button>
+          <button class="btn btn-outline btn-sm" onclick="addMetalItem('Landing')">+ Landing</button>
+          <button class="btn btn-outline btn-sm" onclick="addMetalItem('Railing')">+ Railing</button>
+          <button class="btn btn-outline btn-sm" onclick="addMetalItem('Gate')">+ Gate</button>
+          <button class="btn btn-outline btn-sm" onclick="addMetalItem('Other')">+ Other</button>
+        </div>
+      </div>
+
+      <!-- RUST CONDITION -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🔧</span> Rust Condition & Prep</div>
+        <div class="card-body">
+          <div class="section-label">Rust / Prep Level</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="metalPrepSelector">
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setMetalPrep('light', this)">
+              Light<br><span style="font-size:10px;color:var(--text-light)">50 SF/HR<br>Surface dust, minimal rust</span>
+            </div>
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setMetalPrep('medium', this)">
+              Medium<br><span style="font-size:10px;color:var(--text-light)">35 SF/HR<br>Surface rust, flaking</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setMetalPrep('heavy', this)">
+              Heavy<br><span style="font-size:10px;color:var(--text-light)">20 SF/HR<br>Severe rust, pitting</span>
+            </div>
+          </div>
+
+          <div class="section-label">Prep Coverage</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div style="font-size:13px;color:var(--text-light);">% of metal that needs prep</div>
+            <div class="markup-val" id="metalPrepPctDisplay">70%</div>
+          </div>
+          <input type="range" id="metalPrepPctSlider" min="0" max="100" value="70" step="5" oninput="updateMetalPrepPct()">
+          <div class="margin-labels"><span>0%</span><span>25%</span><span>50%</span><span>75%</span><span>100%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Application Method</div>
+          <div style="display:flex;gap:8px;margin-bottom:14px" id="metalMethodSelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setMetalMethod('brush', this)">
+              Brush<br><span style="font-size:10px;color:var(--text-light)">100 SF/HR<br>Best for bars & detail</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setMetalMethod('spray', this)">
+              Spray<br><span style="font-size:10px;color:var(--text-light)">175 SF/HR<br>Open flat surfaces</span>
+            </div>
+          </div>
+
+          <div class="section-label">Coats of Paint</div>
+          <div class="coats-selector" style="margin-bottom:14px" id="metalCoatsSelector">
+            <div class="coat-btn" onclick="setMetalCoats(1, this)">1 Coat</div>
+            <div class="coat-btn active" onclick="setMetalCoats(2, this)">2 Coats</div>
+            <div class="coat-btn" onclick="setMetalCoats(3, this)">3 Coats</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- PAINT TIER -->
+      <div class="card">
+        <div class="card-header"><span class="icon">🎨</span> Paint System</div>
+        <div class="card-body">
+          <div class="section-label">Select Tier</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="metalTierSelector">
+            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setMetalTier('standard', this)">
+              Standard<br><span style="font-size:10px;color:var(--text-light)">Forte DTM<br>Direct to metal</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setMetalTier('pro', this)">
+              Pro<br><span style="font-size:10px;color:var(--text-light)">DTM Primer<br>+ Forte topcoat</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setMetalTier('premium', this)">
+              Premium<br><span style="font-size:10px;color:var(--text-light)">Macropoxy 646<br>+ Acrolon 218</span>
+            </div>
+          </div>
+
+          <!-- Tier details display -->
+          <div id="metalTierInfo" style="background:var(--gray);border-radius:8px;padding:12px;margin-bottom:14px">
+            <div id="metalTierDesc" style="font-size:13px;font-weight:600;color:var(--dark);margin-bottom:4px">SW Forte Urethanized Acrylic Coating (Satin)</div>
+            <div id="metalTierDetail" style="font-size:11px;color:var(--text-light);">Direct to metal — no primer needed. Good for light rust and maintenance repaints.</div>
+          </div>
+
+          <!-- Standard: Topcoat only -->
+          <div id="metalTier-standard">
+            <div class="section-label">Topcoat (Direct to Metal)</div>
+            <div class="field" style="margin-bottom:14px">
+              <select id="metalStdTopcoat" onchange="calculateMetal()">
+                <option value="79.45|SW Forte Satin|gal" selected>SW Forte Urethanized Acrylic (Satin) — $79.45/gal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Pro: Primer + Topcoat -->
+          <div id="metalTier-pro" style="display:none">
+            <div class="section-label">Primer (DTM)</div>
+            <div class="field" style="margin-bottom:14px">
+              <select id="metalProPrimer" onchange="calculateMetal()">
+                <option value="52.45|Pro Industrial DTM Acrylic|gal" selected>Pro Industrial DTM Acrylic — $52.45/gal</option>
+              </select>
+            </div>
+            <div class="section-label">Topcoat</div>
+            <div class="field" style="margin-bottom:14px">
+              <select id="metalProTopcoat" onchange="calculateMetal()">
+                <option value="79.45|SW Forte Satin|gal" selected>SW Forte Urethanized Acrylic (Satin) — $79.45/gal</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Premium: Industrial 2-Part Systems -->
+          <div id="metalTier-premium" style="display:none">
+            <div class="section-label">Primer (2-Part Epoxy)</div>
+            <div class="field" style="margin-bottom:14px">
+              <select id="metalPremPrimer" onchange="calculateMetal()">
+                <option value="170|Macropoxy 646 Epoxy|kit2" selected>Macropoxy 646 (A+B = 2 gal kit) — $170/kit</option>
+              </select>
+            </div>
+            <div class="section-label">Topcoat (2-Part Urethane)</div>
+            <div class="field" style="margin-bottom:14px">
+              <select id="metalPremTopcoat" onchange="calculateMetal()">
+                <option value="160|Acrolon 218 Urethane|kit1" selected>Acrolon 218 (A+B = 1 gal kit) — $160/kit</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Paint Markup</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Markup on materials</div>
+              <div style="font-size:11px;color:var(--text-light);">Covers pickup, waste, handling</div>
+            </div>
+            <div class="markup-val" id="metalMarkupDisplay">15%</div>
+          </div>
+          <input type="range" id="metalMarkupSlider" min="0" max="30" value="15" oninput="updateMetalMarkup()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>15%</span><span>20%</span><span>30%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Job Supplies</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Wire wheels, sandpaper, rags, tape, drops</div>
+              <div style="font-size:11px;color:var(--text-light);">% of paint cost</div>
+            </div>
+            <div class="markup-val" id="metalSuppliesDisplay">10%</div>
+          </div>
+          <input type="range" id="metalSuppliesSlider" min="0" max="40" value="10" oninput="updateMetalSupplies()">
+          <div class="margin-labels"><span>0%</span><span>10%</span><span>20%</span><span>30%</span><span>40%</span></div>
+        </div>
+      </div>
+
+      <!-- JOB SETTINGS -->
+      <div class="card">
+        <div class="card-header"><span class="icon">👷</span> Job Settings</div>
+        <div class="card-body">
+          <div class="section-label">Number of Subs / Painters</div>
+          <div class="painters-row" style="margin-bottom:18px">
+            <button class="painter-btn" onclick="changeMetalPainters(-1)">&#8722;</button>
+            <div class="painter-count" id="metalPaintersCount">1</div>
+            <button class="painter-btn" onclick="changeMetalPainters(1)">+</button>
+            <div style="font-size:13px; color:var(--text-light); margin-left:6px;">@ $30.00/hr each</div>
+          </div>
+
+          <div class="divider"></div>
+          <div class="section-label">Overhead % del precio</div>
+          <div class="markup-row" style="margin-bottom:6px">
+            <div>
+              <div style="font-size:13px;color:var(--text-light);">Business operations cost</div>
+            </div>
+            <div class="markup-val" id="metalOverheadDisplay" style="color:var(--dark3)">15%</div>
+          </div>
+          <input type="range" id="metalOverheadSlider" min="10" max="25" value="15" oninput="updateMetalOverhead()">
+          <div class="margin-labels"><span>10%</span><span>13%</span><span>15%</span><span>20%</span><span>25%</span></div>
+
+          <div class="divider"></div>
+          <div class="section-label">Desired Profit Margin</div>
+          <div class="margin-display">
+            <span id="metalMarginDisplay">40%</span>
+            <span>profit margin</span>
+          </div>
+          <input type="range" id="metalMarginSlider" min="20" max="60" value="40" oninput="updateMetalMargin()">
+          <div class="margin-labels">
+            <span>20%</span><span>30%</span><span style="color:var(--gold);font-weight:700">40%</span><span style="color:var(--green);font-weight:700">50%</span><span>60%</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-gold btn-full" style="font-size:16px; padding:16px;" onclick="showResults()">
+        Calculate Metal Estimate →
+      </button>
+    </div>
+
   </div><!-- /tab-estimate -->
 
 
@@ -965,6 +1170,80 @@ let cabPrepLevel = 'light';
 let cabMatMarkup = 0.15;
 let cabOverheadPct = 0.15;
 
+// Metal/Iron state
+let metalItems = [];
+let metalItemCounter = 0;
+let metalPrepLevel = 'medium';
+let metalPrepPct = 0.70;
+let metalMethod = 'brush';
+let metalCoats = 2;
+let metalTier = 'standard';
+let metalNumPainters = 1;
+let metalMatMarkup = 0.15;
+let metalSuppliesPct = 0.10;
+let metalOverheadPct = 0.15;
+
+// Metal PCA Production Rates (SF/HR)
+const METAL_RATES = {
+  prep_light: 50,     // SF/HR — dust, light sand
+  prep_medium: 35,    // SF/HR — wire brush rust, flaking
+  prep_heavy: 20,     // SF/HR — severe rust, pitting, orbital sanding
+  brush_1st: 100,     // SF/HR — brush on metal railings/bars
+  brush_add: 130,     // SF/HR — additional coats brush
+  spray_1st: 175,     // SF/HR — spray open flat surfaces
+  spray_add: 225,     // SF/HR — additional coats spray
+  stairs_1st: 60,     // SF/HR — diamond plate stairs (textured, slow)
+  stairs_add: 80,     // SF/HR — additional coats stairs
+  primer_brush: 80,   // SF/HR — primer application brush
+  primer_spray: 150,  // SF/HR — primer application spray
+  setup_factor: 0.15, // 15% buffer for setup, masking, cleanup
+};
+
+const METAL_COVERAGE = {
+  topcoat: 250,  // SF per gallon (metal, textured = less coverage)
+  primer: 300,   // SF per gallon
+};
+
+// Metal Paint Tiers
+const METAL_TIERS = {
+  standard: {
+    name: 'Standard',
+    desc: 'SW Forte Urethanized Acrylic Coating (Satin)',
+    detail: 'Direct to metal — no primer needed. Good for light rust and maintenance repaints.',
+    hasPrimer: false,
+    topcoatPrice: 79.45,
+    topcoatName: 'SW Forte Satin',
+    primerPrice: 0,
+    primerName: '',
+    primerIsKit: false,
+    topcoatIsKit: false,
+  },
+  pro: {
+    name: 'Pro',
+    desc: 'Pro Industrial DTM Primer + SW Forte Topcoat',
+    detail: 'DTM primer for heavy rust + Forte topcoat. Best for rusted surfaces needing maximum adhesion.',
+    hasPrimer: true,
+    topcoatPrice: 79.45,
+    topcoatName: 'SW Forte Satin',
+    primerPrice: 52.45,
+    primerName: 'Pro Industrial DTM Acrylic',
+    primerIsKit: false,
+    topcoatIsKit: false,
+  },
+  premium: {
+    name: 'Premium',
+    desc: 'Macropoxy 646 Epoxy Primer + Acrolon 218 Urethane Topcoat',
+    detail: 'Industrial-grade 2-part epoxy primer + urethane topcoat. 10+ years protection. Maximum corrosion resistance for Chicago winters.',
+    hasPrimer: true,
+    topcoatPrice: 160,    // per kit (A+B = 1 gal)
+    topcoatName: 'Acrolon 218 Urethane',
+    primerPrice: 170,     // per kit (A+B = 2 gal)
+    primerName: 'Macropoxy 646 Epoxy',
+    primerIsKit: true,    // 1 kit = 2 gal mixed
+    topcoatIsKit: true,   // 1 kit = 1 gal mixed
+  },
+};
+
 const CAB_SUB_RATES = {
   light: 140,      // $/piece — scuff sand, clean substrate
   moderate: 150,   // $/piece — small repairs, adhesion concerns
@@ -1008,6 +1287,7 @@ function setJobType(type, el) {
   document.getElementById('section-interior').style.display = type === 'interior' ? 'block' : 'none';
   document.getElementById('section-exterior').style.display = type === 'exterior' ? 'block' : 'none';
   document.getElementById('section-cabinets').style.display = type === 'cabinets' ? 'block' : 'none';
+  document.getElementById('section-metal').style.display = type === 'metal' ? 'block' : 'none';
 }
 
 // ============================================================
@@ -1030,7 +1310,37 @@ function setRoomCoats(id, n, el) {
   const room = getRoomData(id);
   if (!room) return;
   room.coats = n;
+  room.wallCoats = n;
+  room.ceilCoats = n;
   document.querySelectorAll(`#room-coats-${id} .coat-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function setRoomWallCoats(id, n, el) {
+  const room = getRoomData(id);
+  if (!room) return;
+  room.wallCoats = n;
+  room.coats = n; // keep coats in sync for backwards compat
+  document.querySelectorAll(`#room-wallcoats-${id} .coat-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function setRoomCeilCoats(id, n, el) {
+  const room = getRoomData(id);
+  if (!room) return;
+  room.ceilCoats = n;
+  document.querySelectorAll(`#room-ceilcoats-${id} .coat-btn`).forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculate();
+}
+
+function setRoomPrep(id, level, el) {
+  const room = getRoomData(id);
+  if (!room) return;
+  room.prepLevel = level;
+  document.querySelectorAll(`#room-prep-${id} .coat-btn`).forEach(b => b.classList.remove('active'));
   el.classList.add('active');
   calculate();
 }
@@ -1074,7 +1384,7 @@ function updateOverheadPct() {
 // ============================================================
 function addRoom(defaultName) {
   const id = ++roomCounter;
-  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim', 'doors', 'windows'], coats: numCoats };
+  const room = { id, name: defaultName, l: '', w: '', h: 9, doors_flush: 1, doors_panel: 0, windows: 1, surfaces: ['walls', 'ceiling', 'trim', 'doors', 'windows'], coats: numCoats, wallCoats: numCoats, ceilCoats: numCoats, prepLevel: 'none' };
   rooms.push(room);
   renderRooms();
   setTimeout(() => toggleRoom(id), 50);
@@ -1083,7 +1393,7 @@ function addRoom(defaultName) {
 function addCloset() {
   const id = ++roomCounter;
   const n = rooms.filter(r => r.name.startsWith('Closet')).length + 1;
-  const room = { id, name: 'Closet ' + n, l: '', w: '', h: 9, doors_flush: 0, doors_panel: 1, windows: 0, surfaces: ['walls', 'trim', 'doors'], coats: 1 };
+  const room = { id, name: 'Closet ' + n, l: '', w: '', h: 9, doors_flush: 0, doors_panel: 1, windows: 0, surfaces: ['walls', 'trim', 'doors'], coats: 1, wallCoats: 1, ceilCoats: 1, prepLevel: 'none' };
   rooms.push(room);
   renderRooms();
   setTimeout(() => toggleRoom(id), 50);
@@ -1229,11 +1539,25 @@ function renderRooms() {
           <div class="surface-chip ${room.surfaces.includes('windows')?'checked':''}" onclick="toggleSurface(${room.id}, 'windows', this)">🪟 Windows</div>
         </div>
         <div class="divider"></div>
-        <div class="section-label">Coats — este cuarto</div>
-        <div class="coats-selector" id="room-coats-${room.id}" style="margin-bottom:4px">
-          <div class="coat-btn ${(room.coats||1)===1?'active':''}" onclick="setRoomCoats(${room.id}, 1, this)">1 Coat</div>
-          <div class="coat-btn ${(room.coats||1)===2?'active':''}" onclick="setRoomCoats(${room.id}, 2, this)">2 Coats</div>
-          <div class="coat-btn ${(room.coats||1)===3?'active':''}" onclick="setRoomCoats(${room.id}, 3, this)">3 Coats</div>
+        <div class="section-label">Coats — Walls</div>
+        <div class="coats-selector" id="room-wallcoats-${room.id}" style="margin-bottom:10px">
+          <div class="coat-btn ${(room.wallCoats||2)===1?'active':''}" onclick="setRoomWallCoats(${room.id}, 1, this)">1 Coat</div>
+          <div class="coat-btn ${(room.wallCoats||2)===2?'active':''}" onclick="setRoomWallCoats(${room.id}, 2, this)">2 Coats</div>
+          <div class="coat-btn ${(room.wallCoats||2)===3?'active':''}" onclick="setRoomWallCoats(${room.id}, 3, this)">3 Coats</div>
+        </div>
+        <div class="section-label">Coats — Ceiling</div>
+        <div class="coats-selector" id="room-ceilcoats-${room.id}" style="margin-bottom:10px">
+          <div class="coat-btn ${(room.ceilCoats||2)===1?'active':''}" onclick="setRoomCeilCoats(${room.id}, 1, this)">1 Coat</div>
+          <div class="coat-btn ${(room.ceilCoats||2)===2?'active':''}" onclick="setRoomCeilCoats(${room.id}, 2, this)">2 Coats</div>
+          <div class="coat-btn ${(room.ceilCoats||2)===3?'active':''}" onclick="setRoomCeilCoats(${room.id}, 3, this)">3 Coats</div>
+        </div>
+        <div class="divider"></div>
+        <div class="section-label">Prep Level</div>
+        <div style="display:flex;gap:6px;margin-bottom:4px" id="room-prep-${room.id}">
+          <div class="coat-btn ${(room.prepLevel||'none')==='none'?'active':''}" style="flex:1;font-size:11px" onclick="setRoomPrep(${room.id}, 'none', this)">None</div>
+          <div class="coat-btn ${(room.prepLevel||'none')==='light'?'active':''}" style="flex:1;font-size:11px" onclick="setRoomPrep(${room.id}, 'light', this)">Light<br><span style="font-size:9px;color:var(--text-light)">+10%</span></div>
+          <div class="coat-btn ${(room.prepLevel||'none')==='medium'?'active':''}" style="flex:1;font-size:11px" onclick="setRoomPrep(${room.id}, 'medium', this)">Medium<br><span style="font-size:9px;color:var(--text-light)">+20%</span></div>
+          <div class="coat-btn ${(room.prepLevel||'none')==='heavy'?'active':''}" style="flex:1;font-size:11px" onclick="setRoomPrep(${room.id}, 'heavy', this)">Heavy<br><span style="font-size:9px;color:var(--text-light)">+35%</span></div>
         </div>
         <div class="divider"></div>
         <div class="section-label">Openings</div>
@@ -1262,50 +1586,66 @@ function renderRooms() {
 function calculate() {
   if (jobType === 'exterior') return calculateExterior();
   if (jobType === 'cabinets') return calculateCabinets();
+  if (jobType === 'metal') return calculateMetal();
   if (rooms.length === 0) {
     document.getElementById('preview-price').textContent = '—';
     return;
   }
 
-  // Aggregate SF and hours per room (per-room coats)
+  // Aggregate SF and hours per room (per-room coats — walls and ceiling separate)
   let totalWallSF = 0, totalCeilSF = 0, totalTrimSF = 0, totalDoorSF = 0, totalWindowSF = 0;
   let wallCoatSF = 0, ceilCoatSF = 0, trimCoatSF = 0, doorCoatSF = 0, windowCoatSF = 0;
   let wallHours = 0, ceilHours = 0, trimHours = 0, doorHours = 0, windowHours = 0;
+  let totalPrepHours = 0;
+
+  // Prep level multipliers
+  const PREP_MULT = { none: 0, light: 0.10, medium: 0.20, heavy: 0.35 };
 
   rooms.forEach(room => {
     const sf = calcRoomSF(room);
-    const c = room.coats || 1;
+    const wc = room.wallCoats || room.coats || 1;   // wall coats
+    const cc = room.ceilCoats || room.coats || 1;    // ceiling coats
+    const tc = room.wallCoats || room.coats || 1;    // trim/doors/windows use wall coats
     if (room.surfaces.includes('walls') && sf.walls > 0) {
       totalWallSF += sf.walls;
-      wallCoatSF += sf.walls * c;
+      wallCoatSF += sf.walls * wc;
       wallHours += sf.walls / RATES.walls_roll_1st;
-      if (c > 1) wallHours += sf.walls * (c - 1) / RATES.walls_roll_add;
+      if (wc > 1) wallHours += sf.walls * (wc - 1) / RATES.walls_roll_add;
     }
     if (room.surfaces.includes('ceiling') && sf.ceiling > 0) {
       totalCeilSF += sf.ceiling;
-      ceilCoatSF += sf.ceiling * c;
+      ceilCoatSF += sf.ceiling * cc;
       ceilHours += sf.ceiling / RATES.ceil_roll_1st;
-      if (c > 1) ceilHours += sf.ceiling * (c - 1) / RATES.ceil_roll_add;
+      if (cc > 1) ceilHours += sf.ceiling * (cc - 1) / RATES.ceil_roll_add;
     }
     if (room.surfaces.includes('trim') && sf.trim > 0) {
       totalTrimSF += sf.trim;
-      trimCoatSF += sf.trim * c;
+      trimCoatSF += sf.trim * tc;
       trimHours += sf.trim / RATES.trim_brush_1st;
-      if (c > 1) trimHours += sf.trim * (c - 1) / RATES.trim_brush_add;
+      if (tc > 1) trimHours += sf.trim * (tc - 1) / RATES.trim_brush_add;
     }
     if (room.surfaces.includes('doors') && sf.doors > 0) {
       totalDoorSF += sf.doors;
-      doorCoatSF += sf.doors * c;
+      doorCoatSF += sf.doors * tc;
       // Room doors (2-sided, 34 SF): flush rate | Closet/bifold (1-sided, 17 SF): 25% slower (rails + panels)
       const h1 = (sf.doorsFlush * 34) / RATES.door_flush_1st + (sf.doorsPanel * 17) / (RATES.door_flush_1st * 0.75);
       const hAdd = (sf.doorsFlush * 34) / RATES.door_flush_add + (sf.doorsPanel * 17) / (RATES.door_flush_add * 0.75);
-      doorHours += h1 + (c > 1 ? hAdd * (c - 1) : 0);
+      doorHours += h1 + (tc > 1 ? hAdd * (tc - 1) : 0);
     }
     if (room.surfaces.includes('windows') && sf.windows > 0) {
       totalWindowSF += sf.windows;
-      windowCoatSF += sf.windows * c;
+      windowCoatSF += sf.windows * tc;
       windowHours += sf.windows / RATES.trim_brush_1st;
-      if (c > 1) windowHours += sf.windows * (c - 1) / RATES.trim_brush_add;
+      if (tc > 1) windowHours += sf.windows * (tc - 1) / RATES.trim_brush_add;
+    }
+
+    // Prep hours for this room
+    const prepMult = PREP_MULT[room.prepLevel || 'none'];
+    if (prepMult > 0) {
+      const roomPaintHours = (sf.walls > 0 && room.surfaces.includes('walls') ? sf.walls / RATES.walls_roll_1st : 0)
+        + (sf.ceiling > 0 && room.surfaces.includes('ceiling') ? sf.ceiling / RATES.ceil_roll_1st : 0)
+        + (sf.trim > 0 && room.surfaces.includes('trim') ? sf.trim / RATES.trim_brush_1st : 0);
+      totalPrepHours += roomPaintHours * prepMult;
     }
   });
 
@@ -1316,8 +1656,9 @@ function calculate() {
   }
 
   const productionHours = (wallHours + ceilHours + trimHours + doorHours + windowHours) * complexityFactor;
-  const setupHours = productionHours * RATES.setup_factor;
-  const totalHours = productionHours + setupHours;
+  const prepHoursAdj = totalPrepHours * complexityFactor;
+  const setupHours = (productionHours + prepHoursAdj) * RATES.setup_factor;
+  const totalHours = productionHours + prepHoursAdj + setupHours;
   const laborCost = totalHours * PAINTER_RATE;
 
   // Job duration
@@ -1362,7 +1703,8 @@ function calculate() {
   // Store result
   lastResult = {
     totalWallSF, totalCeilSF, totalTrimSF, totalDoorSF, totalWindowSF,
-    wallHours, ceilHours, trimHours, doorHours, windowHours, productionHours, setupHours, totalHours,
+    wallHours, ceilHours, trimHours, doorHours, windowHours, productionHours, prepHoursAdj, setupHours, totalHours,
+    totalPrepHours,
     laborCost, jobDays,
     wallGals, wallName, wallPrice: parseFloat(wallPrice), wallMatCost,
     ceilGals, ceilName, ceilPrice: parseFloat(ceilPrice), ceilMatCost,
@@ -1441,6 +1783,26 @@ function saveToSheets() {
       totalPrice: r.price.toFixed(2),
       profit: r.profit.toFixed(2),
     };
+  } else if (r.jobType === 'metal') {
+    payload = {
+      client, address, notes,
+      module: 'Metal/Iron',
+      roomsOrPieces: metalItems.length + ' components',
+      totalSF: r.totalMetalSF.toFixed(0),
+      prepLevel: r.metalPrepLevel + ' (' + Math.round(r.metalPrepPct*100) + '%)',
+      complexity: r.metalTier.charAt(0).toUpperCase() + r.metalTier.slice(1) + ' tier',
+      painters: r.metalNumPainters,
+      laborHours: r.totalHours.toFixed(1),
+      laborCost: r.laborCost.toFixed(2),
+      materialCost: r.totalMatBase.toFixed(2),
+      matMarkup: r.totalMatMarkup.toFixed(2),
+      suppliesCost: (r.jobSupplies || 0).toFixed(2),
+      overhead: r.overheadAmt.toFixed(2),
+      margin: Math.round(r.margin * 100),
+      totalCost: r.totalCost.toFixed(2),
+      totalPrice: r.price.toFixed(2),
+      profit: r.profit.toFixed(2),
+    };
   } else if (r.jobType === 'cabinets') {
     payload = {
       client, address, notes,
@@ -1467,7 +1829,7 @@ function saveToSheets() {
       module: 'Interior',
       roomsOrPieces: rooms.length + ' rooms',
       totalSF: (r.totalWallSF + r.totalCeilSF + r.totalTrimSF + r.totalDoorSF + r.totalWindowSF).toFixed(0),
-      prepLevel: '',
+      prepLevel: rooms.map(rm => rm.prepLevel || 'none').filter(p => p !== 'none').length > 0 ? rooms.map(rm => rm.name + ':' + (rm.prepLevel || 'none')).join(', ') : 'None',
       complexity: ['Simple','Medium','High/Stairs'][complexityFactor === 1.75 ? 0 : complexityFactor === 2.25 ? 1 : 2],
       painters: r.numPainters,
       laborHours: r.totalHours.toFixed(1),
@@ -1516,6 +1878,7 @@ function fmtN(n) { return n.toFixed(1); }
 function renderResults() {
   if (jobType === 'exterior') return renderExteriorResults();
   if (jobType === 'cabinets') return renderCabinetResults();
+  if (jobType === 'metal') return renderMetalResults();
   if (!lastResult) { calculate(); }
   if (!lastResult) return;
 
@@ -1547,6 +1910,7 @@ function renderResults() {
   document.getElementById('r-labor').innerHTML = `
     <div class="breakdown-row" style="background:#fff8e8"><span class="label">Complexity factor</span><span class="val" style="color:var(--gold)">${complexityLabel} (×${r.complexityFactor})</span></div>
     <div class="breakdown-row"><span class="label">Production hours (adj.)</span><span class="val">${fmtN(r.productionHours)} hrs</span></div>
+    ${r.prepHoursAdj > 0 ? `<div class="breakdown-row" style="background:#fff8e8"><span class="label">🔧 Prep hours (adj.)</span><span class="val">${fmtN(r.prepHoursAdj)} hrs</span></div>` : ''}
     <div class="breakdown-row"><span class="label">Setup & cleanup (18%)</span><span class="val">${fmtN(r.setupHours)} hrs</span></div>
     <div class="breakdown-row"><span class="label">Total hours on job</span><span class="val">${fmtN(r.totalHours)} hrs</span></div>
     <div class="breakdown-row"><span class="label">Job duration (${r.numPainters} painter${r.numPainters>1?'s':''})</span><span class="val">${r.jobDays} day${r.jobDays>1?'s':''}</span></div>
@@ -2198,6 +2562,401 @@ function renderCabinetResults() {
     '<div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;"><div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div><div class="result-value gold">' + '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</div></div>' +
     '<div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">' +
       '🗄️ ' + r.totalPieces + ' pieces &nbsp;|&nbsp; ' + fmt(r.price / r.totalPieces) + '/piece to client &nbsp;|&nbsp; 📅 ~' + r.jobDays + ' days' +
+    '</div>';
+}
+
+// ============================================================
+// METAL/IRON — ITEMS MANAGEMENT
+// ============================================================
+function addMetalItem(type) {
+  const id = ++metalItemCounter;
+  const item = { id, name: type, type: type.toLowerCase(), w: '', h: '' };
+  metalItems.push(item);
+  renderMetalItems();
+  setTimeout(() => toggleMetalItem(id), 50);
+}
+
+function removeMetalItem(id) {
+  metalItems = metalItems.filter(i => i.id !== id);
+  renderMetalItems();
+  calculateMetal();
+}
+
+function toggleMetalItem(id) {
+  const body = document.getElementById('metal-item-body-' + id);
+  const toggle = document.getElementById('metal-item-toggle-' + id);
+  if (body) {
+    const isOpen = body.classList.contains('open');
+    body.classList.toggle('open', !isOpen);
+    toggle.classList.toggle('open', !isOpen);
+  }
+}
+
+function updateMetalItemField(id, field, value) {
+  const item = metalItems.find(i => i.id === id);
+  if (item) {
+    item[field] = field === 'name' ? value : (parseFloat(value) || 0);
+    const nameEl = document.getElementById('metal-item-name-' + id);
+    if (nameEl && field === 'name') nameEl.textContent = value || 'Item';
+    const sfEl = document.getElementById('metal-item-sf-' + id);
+    if (sfEl) {
+      const sf = (parseFloat(item.w) || 0) * (parseFloat(item.h) || 0);
+      sfEl.textContent = sf > 0 ? sf.toFixed(0) + ' SF' : '';
+    }
+    calculateMetal();
+  }
+}
+
+function renderMetalItems() {
+  const container = document.getElementById('metal-items-container');
+  if (metalItems.length === 0) {
+    container.innerHTML = '<div class="empty-state"><div class="icon">🔩</div><p>No components added yet.<br>Tap below to add metal sections.</p></div>';
+    document.getElementById('metal-items-summary').style.display = 'none';
+    return;
+  }
+  container.innerHTML = metalItems.map(item => {
+    const sf = (parseFloat(item.w) || 0) * (parseFloat(item.h) || 0);
+    const typeIcon = item.type === 'fence' ? '🏗️' : item.type === 'stairs' ? '🪜' : item.type === 'landing' ? '⬛' : item.type === 'railing' ? '📏' : item.type === 'gate' ? '🚪' : '🔩';
+    const hLabel = item.type === 'railing' ? 'Width (ft)' : 'Height (ft)';
+    const wLabel = item.type === 'landing' ? 'Length (ft)' : 'Linear Feet';
+    return '<div class="room-card">' +
+      '<div class="room-header" onclick="toggleMetalItem(' + item.id + ')">' +
+        '<div><div class="room-name" id="metal-item-name-' + item.id + '">' + typeIcon + ' ' + item.name + '</div>' +
+        '<div class="room-sf" id="metal-item-sf-' + item.id + '">' + (sf > 0 ? sf.toFixed(0) + ' SF' : '') + '</div></div>' +
+        '<div style="display:flex;align-items:center;gap:10px;">' +
+          '<button class="btn btn-danger btn-sm" onclick="event.stopPropagation();removeMetalItem(' + item.id + ')">✕</button>' +
+          '<div class="room-toggle" id="metal-item-toggle-' + item.id + '">▾</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="room-body" id="metal-item-body-' + item.id + '">' +
+        '<div class="form-grid full" style="margin-bottom:12px"><div class="field"><label>Component Name</label>' +
+          '<input type="text" value="' + item.name + '" onchange="updateMetalItemField(' + item.id + ', \'name\', this.value)"></div></div>' +
+        '<div class="form-grid" style="margin-bottom:8px">' +
+          '<div class="field"><label>' + wLabel + '</label><input type="number" value="' + item.w + '" placeholder="e.g. 34" onchange="updateMetalItemField(' + item.id + ', \'w\', this.value)"></div>' +
+          '<div class="field"><label>' + hLabel + '</label><input type="number" value="' + item.h + '" placeholder="e.g. 6" onchange="updateMetalItemField(' + item.id + ', \'h\', this.value)"></div>' +
+        '</div>' +
+        (item.type === 'stairs' ? '<div style="font-size:11px;color:var(--text-light);margin-top:4px;">For stairs: LF = width of steps, Height = # steps × ~1 ft per step (tread + riser)</div>' : '') +
+      '</div>' +
+    '</div>';
+  }).join('');
+}
+
+function updateMetalItemsSummary() {
+  if (metalItems.length === 0) return;
+  const summary = document.getElementById('metal-items-summary');
+  let totalSF = 0;
+  metalItems.forEach(i => { totalSF += (parseFloat(i.w) || 0) * (parseFloat(i.h) || 0); });
+  summary.style.display = 'block';
+  summary.innerHTML = '<div style="font-size:12px; font-weight:700; color:var(--text-light); margin-bottom:6px; text-transform:uppercase;">Total Metal SF</div>' +
+    metalItems.map(i => {
+      const sf = (parseFloat(i.w) || 0) * (parseFloat(i.h) || 0);
+      return '<div class="rooms-summary-row"><span class="surface">' + i.name + '</span><span class="sf">' + sf.toFixed(0) + ' SF</span></div>';
+    }).join('') +
+    '<div class="rooms-summary-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span style="font-weight:700">Total</span><span class="sf" style="color:var(--gold);font-size:15px">' + totalSF.toFixed(0) + ' SF</span></div>';
+}
+
+// ============================================================
+// METAL/IRON — CONTROLS
+// ============================================================
+function setMetalPrep(level, el) {
+  metalPrepLevel = level;
+  document.querySelectorAll('#metalPrepSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  const defaults = { light: 30, medium: 70, heavy: 100 };
+  document.getElementById('metalPrepPctSlider').value = defaults[level];
+  metalPrepPct = defaults[level] / 100;
+  document.getElementById('metalPrepPctDisplay').textContent = defaults[level] + '%';
+  calculateMetal();
+}
+
+function updateMetalPrepPct() {
+  const v = document.getElementById('metalPrepPctSlider').value;
+  metalPrepPct = parseInt(v) / 100;
+  document.getElementById('metalPrepPctDisplay').textContent = v + '%';
+  calculateMetal();
+}
+
+function setMetalMethod(method, el) {
+  metalMethod = method;
+  document.querySelectorAll('#metalMethodSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculateMetal();
+}
+
+function setMetalCoats(n, el) {
+  metalCoats = n;
+  document.querySelectorAll('#metalCoatsSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  calculateMetal();
+}
+
+function setMetalTier(tier, el) {
+  metalTier = tier;
+  document.querySelectorAll('#metalTierSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // Show/hide tier details
+  document.getElementById('metalTier-standard').style.display = tier === 'standard' ? 'block' : 'none';
+  document.getElementById('metalTier-pro').style.display = tier === 'pro' ? 'block' : 'none';
+  document.getElementById('metalTier-premium').style.display = tier === 'premium' ? 'block' : 'none';
+  // Update info box
+  const t = METAL_TIERS[tier];
+  document.getElementById('metalTierDesc').textContent = t.desc;
+  document.getElementById('metalTierDetail').textContent = t.detail;
+  calculateMetal();
+}
+
+function changeMetalPainters(delta) {
+  metalNumPainters = Math.max(1, Math.min(10, metalNumPainters + delta));
+  document.getElementById('metalPaintersCount').textContent = metalNumPainters;
+  calculateMetal();
+}
+
+function updateMetalMarkup() {
+  const v = document.getElementById('metalMarkupSlider').value;
+  metalMatMarkup = parseInt(v) / 100;
+  document.getElementById('metalMarkupDisplay').textContent = v + '%';
+  calculateMetal();
+}
+
+function updateMetalSupplies() {
+  const v = document.getElementById('metalSuppliesSlider').value;
+  metalSuppliesPct = parseInt(v) / 100;
+  document.getElementById('metalSuppliesDisplay').textContent = v + '%';
+  calculateMetal();
+}
+
+function updateMetalOverhead() {
+  const v = document.getElementById('metalOverheadSlider').value;
+  metalOverheadPct = parseInt(v) / 100;
+  document.getElementById('metalOverheadDisplay').textContent = v + '%';
+  calculateMetal();
+}
+
+function updateMetalMargin() {
+  document.getElementById('metalMarginDisplay').textContent = document.getElementById('metalMarginSlider').value + '%';
+  calculateMetal();
+}
+
+// ============================================================
+// METAL/IRON — CALCULATE
+// ============================================================
+function calculateMetal() {
+  let totalMetalSF = 0;
+  let stairsSF = 0;
+  let otherSF = 0;
+
+  metalItems.forEach(item => {
+    const sf = (parseFloat(item.w) || 0) * (parseFloat(item.h) || 0);
+    totalMetalSF += sf;
+    if (item.type === 'stairs') {
+      stairsSF += sf;
+    } else {
+      otherSF += sf;
+    }
+  });
+
+  if (totalMetalSF === 0) {
+    document.getElementById('preview-price').textContent = '—';
+    lastResult = null;
+    return;
+  }
+
+  // ---- LABOR HOURS ----
+  // 1. Prep (wire brush, sand, clean)
+  const prepSF = totalMetalSF * metalPrepPct;
+  const prepRate = METAL_RATES['prep_' + metalPrepLevel];
+  const prepHours = prepSF / prepRate;
+
+  // 2. Primer (only for Pro and Premium tiers)
+  const tier = METAL_TIERS[metalTier];
+  let primerHours = 0;
+  let primerSF = 0;
+  if (tier.hasPrimer) {
+    primerSF = totalMetalSF;
+    const primerRate = metalMethod === 'brush' ? METAL_RATES.primer_brush : METAL_RATES.primer_spray;
+    primerHours = primerSF / primerRate;
+  }
+
+  // 3. Topcoat painting
+  // Stairs get slower rate (diamond plate texture)
+  const methodKey = metalMethod;
+  let paintHours = 0;
+
+  if (otherSF > 0) {
+    paintHours += otherSF / METAL_RATES[methodKey + '_1st'];
+    if (metalCoats > 1) paintHours += otherSF * (metalCoats - 1) / METAL_RATES[methodKey + '_add'];
+  }
+  if (stairsSF > 0) {
+    paintHours += stairsSF / METAL_RATES.stairs_1st;
+    if (metalCoats > 1) paintHours += stairsSF * (metalCoats - 1) / METAL_RATES.stairs_add;
+  }
+
+  const productionHours = prepHours + primerHours + paintHours;
+  const setupHours = productionHours * METAL_RATES.setup_factor;
+  const totalHours = productionHours + setupHours;
+  const laborCost = totalHours * PAINTER_RATE;
+
+  const hoursPerDay = 8 * metalNumPainters;
+  const jobDays = Math.ceil(totalHours / hoursPerDay);
+
+  // ---- MATERIALS (read from dropdowns) ----
+  let topcoatCost = 0, primerCost = 0, topcoatGals = 0, primerGals = 0;
+  let topcoatName = '', topcoatPrice = 0, topcoatUnit = 'gal';
+  let primerName = '', primerPrice = 0, primerUnit = 'gal';
+  const topcoatCoatSF = totalMetalSF * metalCoats;
+
+  // Read topcoat dropdown based on tier
+  const topcoatSelect = metalTier === 'standard' ? 'metalStdTopcoat' : metalTier === 'pro' ? 'metalProTopcoat' : 'metalPremTopcoat';
+  const [tcPriceStr, tcName, tcUnit] = document.getElementById(topcoatSelect).value.split('|');
+  topcoatPrice = parseFloat(tcPriceStr);
+  topcoatName = tcName;
+  topcoatUnit = tcUnit;
+
+  if (tcUnit === 'kit1') {
+    // 2-part kit = 1 gal mixed
+    topcoatGals = Math.ceil(topcoatCoatSF / METAL_COVERAGE.topcoat);
+    topcoatCost = topcoatGals * topcoatPrice;
+  } else {
+    topcoatGals = Math.ceil(topcoatCoatSF / METAL_COVERAGE.topcoat * 1.10);
+    topcoatCost = topcoatGals * topcoatPrice;
+  }
+
+  // Read primer dropdown if tier has primer
+  if (tier.hasPrimer) {
+    const primerSelect = metalTier === 'pro' ? 'metalProPrimer' : 'metalPremPrimer';
+    const [prPriceStr, prName, prUnit] = document.getElementById(primerSelect).value.split('|');
+    primerPrice = parseFloat(prPriceStr);
+    primerName = prName;
+    primerUnit = prUnit;
+
+    if (prUnit === 'kit2') {
+      // 2-part kit = 2 gal mixed
+      const kitsNeeded = Math.ceil(totalMetalSF / (METAL_COVERAGE.primer * 2));
+      primerGals = kitsNeeded;
+      primerCost = kitsNeeded * primerPrice;
+    } else {
+      primerGals = Math.ceil(totalMetalSF / METAL_COVERAGE.primer * 1.10);
+      primerCost = primerGals * primerPrice;
+    }
+  }
+
+  const totalMatBase = topcoatCost + primerCost;
+  const totalMatMarkup = totalMatBase * metalMatMarkup;
+  const jobSupplies = totalMatBase * metalSuppliesPct;
+  const totalMaterials = totalMatBase + totalMatMarkup + jobSupplies;
+
+  // ---- FINANCIALS ----
+  const margin = parseInt(document.getElementById('metalMarginSlider').value) / 100;
+  const directCost = laborCost + totalMaterials;
+  const price = directCost / (1 - margin - metalOverheadPct);
+  const overheadAmt = price * metalOverheadPct;
+  const totalCost = directCost + overheadAmt;
+  const profit = price - totalCost;
+
+  document.getElementById('preview-price').textContent = '$' + price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+
+  lastResult = {
+    jobType: 'metal',
+    totalMetalSF, stairsSF, otherSF,
+    prepSF, prepHours, primerSF, primerHours, paintHours,
+    productionHours, setupHours, totalHours,
+    laborCost, jobDays,
+    metalTier, metalPrepLevel, metalPrepPct, metalMethod, metalCoats, metalNumPainters,
+    tierName: tier.name,
+    topcoatName, topcoatPrice, topcoatGals, topcoatCost, topcoatUnit,
+    primerName, primerPrice, primerGals, primerCost, primerUnit,
+    hasPrimer: tier.hasPrimer,
+    totalMatBase, totalMatMarkup, metalMatMarkup, jobSupplies, metalSuppliesPct, totalMaterials,
+    directCost, overheadAmt, metalOverheadPct,
+    grossProfit: price - directCost,
+    totalCost, price, profit, margin,
+  };
+
+  updateMetalItemsSummary();
+  return lastResult;
+}
+
+// ============================================================
+// METAL/IRON — RENDER RESULTS
+// ============================================================
+function renderMetalResults() {
+  if (!lastResult) { calculateMetal(); }
+  if (!lastResult) return;
+
+  document.getElementById('results-empty').style.display = 'none';
+  document.getElementById('results-content').style.display = 'block';
+
+  const r = lastResult;
+  const clientName = document.getElementById('clientName').value || 'Client';
+  const address = document.getElementById('clientAddress').value || '';
+  const date = document.getElementById('estDate').value;
+
+  document.getElementById('r-price').textContent = '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  document.getElementById('r-client-sub').textContent = clientName + (address ? ' — ' + address : '') + ' | ' + date + ' | METAL/IRON — ' + r.tierName;
+
+  // Surfaces
+  let surfHTML = '';
+  metalItems.forEach(item => {
+    const sf = (parseFloat(item.w) || 0) * (parseFloat(item.h) || 0);
+    const typeIcon = item.type === 'fence' ? '🏗️' : item.type === 'stairs' ? '🪜' : item.type === 'landing' ? '⬛' : item.type === 'railing' ? '📏' : item.type === 'gate' ? '🚪' : '🔩';
+    surfHTML += '<div class="breakdown-row"><span class="label">' + typeIcon + ' ' + item.name + '</span><span class="val">' + sf.toFixed(0) + ' SF</span></div>';
+  });
+  if (r.prepSF > 0) surfHTML += '<div class="breakdown-row" style="background:#fff3e0"><span class="label">🔧 Prep Area (' + Math.round(r.metalPrepPct*100) + '%)</span><span class="val">' + r.prepSF.toFixed(0) + ' SF</span></div>';
+  if (r.hasPrimer) surfHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (full coat)</span><span class="val">' + r.primerSF.toFixed(0) + ' SF</span></div>';
+  surfHTML += '<div class="breakdown-row" style="background:#e8f5e9;border-radius:6px;font-weight:700"><span class="label">Total Metal</span><span class="val">' + r.totalMetalSF.toFixed(0) + ' SF</span></div>';
+  document.getElementById('r-surfaces').innerHTML = surfHTML;
+
+  // Labor
+  const prepLabel = r.metalPrepLevel === 'light' ? 'Light' : r.metalPrepLevel === 'medium' ? 'Medium' : 'Heavy';
+  const methodLabel = r.metalMethod === 'brush' ? 'Brush' : 'Spray';
+  let laborHTML = '';
+  laborHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">Paint System</span><span class="val" style="color:var(--gold)">' + r.tierName + '</span></div>';
+  laborHTML += '<div class="breakdown-row"><span class="label">🔧 Prep — ' + prepLabel + ' (' + Math.round(r.metalPrepPct*100) + '%)</span><span class="val">' + fmtN(r.prepHours) + ' hrs</span></div>';
+  if (r.primerHours > 0) laborHTML += '<div class="breakdown-row"><span class="label">🪣 Primer Application</span><span class="val">' + fmtN(r.primerHours) + ' hrs</span></div>';
+  laborHTML += '<div class="breakdown-row"><span class="label">🎨 Paint — ' + methodLabel + ' × ' + r.metalCoats + ' coats</span><span class="val">' + fmtN(r.paintHours) + ' hrs</span></div>';
+  laborHTML += '<div class="breakdown-row"><span class="label">Setup & cleanup (15%)</span><span class="val">' + fmtN(r.setupHours) + ' hrs</span></div>';
+  laborHTML += '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span class="label" style="font-weight:700">Total hours on job</span><span class="val" style="font-weight:700">' + fmtN(r.totalHours) + ' hrs</span></div>';
+  laborHTML += '<div class="breakdown-row"><span class="label">Job duration (' + r.metalNumPainters + ' painter' + (r.metalNumPainters>1?'s':'') + ')</span><span class="val">' + r.jobDays + ' day' + (r.jobDays>1?'s':'') + '</span></div>';
+  laborHTML += '<div class="breakdown-row"><span class="label">Labor cost @ $30/hr</span><span class="val" style="color:var(--dark)">' + fmt(r.laborCost) + '</span></div>';
+  document.getElementById('r-labor').innerHTML = laborHTML;
+
+  // Painter pay
+  const hoursPerPainter = r.totalHours / r.metalNumPainters;
+  const payPerPainter = hoursPerPainter * PAINTER_RATE;
+  let painterHTML = '<div class="title">💵 Painter Pay Breakdown</div>';
+  for (let i = 1; i <= r.metalNumPainters; i++) {
+    painterHTML += '<div class="breakdown-row"><span class="label">Painter ' + i + '</span><span class="val" style="color:var(--green)">' + fmtN(hoursPerPainter) + ' hrs × $30 = ' + fmt(payPerPainter) + '</span></div>';
+  }
+  painterHTML += '<div class="breakdown-row" style="border-top:1px solid #a8e6bf; margin-top:4px; padding-top:8px;"><span class="label" style="font-weight:700">Total Painter Pay</span><span class="val" style="color:var(--green); font-size:15px">' + fmt(r.laborCost) + '</span></div>';
+  document.getElementById('r-painter-pay').innerHTML = painterHTML;
+
+  // Materials
+  let matHTML = '';
+  if (r.hasPrimer) {
+    const pUnit = (r.primerUnit === 'kit2') ? ' kit' + (r.primerGals>1?'s':'') : ' gal';
+    matHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 ' + r.primerName + '</span><span class="val">' + r.primerGals + pUnit + ' — ' + fmt(r.primerCost) + '</span></div>';
+  }
+  const tUnit = (r.topcoatUnit === 'kit1') ? ' kit' + (r.topcoatGals>1?'s':'') : ' gal';
+  matHTML += '<div class="breakdown-row"><span class="label">🎨 ' + r.topcoatName + '</span><span class="val">' + r.topcoatGals + tUnit + ' — ' + fmt(r.topcoatCost) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:8px;"><span class="label">Subtotal Paint</span><span class="val">' + fmt(r.totalMatBase) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="background:#f0fff4"><span class="label" style="color:var(--green)">+ Markup ' + Math.round(r.metalMatMarkup*100) + '%</span><span class="val" style="color:var(--green)">' + fmt(r.totalMatMarkup) + '</span></div>';
+  if (r.jobSupplies > 0) matHTML += '<div class="breakdown-row"><span class="label">🧰 Job Supplies ' + Math.round(r.metalSuppliesPct*100) + '% <small style="color:var(--text-light)">wire wheels, sandpaper, rags</small></span><span class="val">' + fmt(r.jobSupplies) + '</span></div>';
+  matHTML += '<div class="breakdown-row" style="border-top:2px solid var(--gold);margin-top:2px;padding-top:8px;"><span class="label" style="font-weight:700">Total Materials</span><span class="val" style="color:var(--dark);font-size:15px">' + fmt(r.totalMaterials) + '</span></div>';
+  document.getElementById('r-materials').innerHTML = matHTML;
+
+  // Financials
+  document.getElementById('r-financials').innerHTML =
+    '<div class="result-row"><div class="result-label">Labor Cost</div><div class="result-value">' + fmt(r.laborCost) + '</div></div>' +
+    '<div class="result-row"><div class="result-label">Paint & Materials</div><div class="result-value">' + fmt(r.totalMatBase) + '</div></div>' +
+    '<div class="result-row" style="background:#f0fff4;border-radius:6px;padding:10px 8px;"><div class="result-label">↳ Markup materiales <small>' + Math.round(r.metalMatMarkup*100) + '%</small></div><div class="result-value green">+ ' + fmt(r.totalMatMarkup) + '</div></div>' +
+    (r.jobSupplies > 0 ? '<div class="result-row"><div class="result-label">Job Supplies ' + Math.round(r.metalSuppliesPct*100) + '%</div><div class="result-value">' + fmt(r.jobSupplies) + '</div></div>' : '') +
+    '<div class="result-row"><div class="result-label">Overhead ' + Math.round(r.metalOverheadPct*100) + '% del job</div><div class="result-value">' + fmt(r.overheadAmt) + '</div></div>' +
+    '<div class="result-row"><div class="result-label"><strong>Total Cost</strong></div><div class="result-value">' + fmt(r.totalCost) + '</div></div>' +
+    '<div class="result-row" style="background:#e8f5e9;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Gross Profit</strong><small>Revenue − Labor − Materials</small></div><div class="result-value green">' + fmt(r.grossProfit) + ' (' + Math.round((r.grossProfit/r.price)*100) + '%)</div></div>' +
+    '<div class="result-row" style="background:#fff3e0;border-radius:6px;padding:10px 8px;"><div class="result-label"><strong>Net Profit</strong><small>Gross − Overhead</small></div><div class="result-value" style="color:#e65100">' + fmt(r.profit) + ' (' + Math.round(r.margin*100) + '%)</div></div>' +
+    '<div class="result-row" style="border-top:2px solid var(--gold);padding-top:14px;margin-top:6px;"><div class="result-label" style="font-size:16px;font-weight:700">Quote to Client</div><div class="result-value gold">' + '$' + r.price.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g, ',') + '</div></div>' +
+    '<div style="background:var(--gray);border-radius:8px;padding:10px 12px;margin-top:12px;font-size:12px;color:var(--text-light);">' +
+      '🔩 ' + r.totalMetalSF.toFixed(0) + ' SF metal &nbsp;|&nbsp; ⚡ ' + fmt(r.price/r.totalMetalSF) + '/SF &nbsp;|&nbsp; ⏱ ' + fmtN(r.totalHours) + ' hrs &nbsp;|&nbsp; 📅 ~' + r.jobDays + ' day' + (r.jobDays>1?'s':'') +
     '</div>';
 }
 
