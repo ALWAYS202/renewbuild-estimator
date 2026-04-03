@@ -423,6 +423,23 @@
       <div class="card">
         <div class="card-header"><span class="icon">🔧</span> Scope & Prep</div>
         <div class="card-body">
+          <div class="section-label">Siding Type</div>
+          <div style="display:flex;gap:8px;margin-bottom:18px" id="extSidingTypeSelector">
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtSidingType('wood', this)">
+              🪵 Wood<br><span style="font-size:9px;color:var(--text-light)">Clapboard, cedar</span>
+            </div>
+            <div class="coat-btn active" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtSidingType('aluminum', this)">
+              🔩 Aluminum<br><span style="font-size:9px;color:var(--text-light)">Smooth, fast</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtSidingType('vinyl', this)">
+              🏠 Vinyl<br><span style="font-size:9px;color:var(--text-light)">Similar to alum</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtSidingType('stucco', this)">
+              🧱 Stucco<br><span style="font-size:9px;color:var(--text-light)">Textured, slow</span>
+            </div>
+          </div>
+
+          <div class="divider"></div>
           <div class="section-label">Prep Condition</div>
           <div style="display:flex;gap:8px;margin-bottom:18px" id="extPrepSelector">
             <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrep('light', this)">
@@ -468,14 +485,17 @@
           <div class="divider"></div>
           <div class="section-label">Primer</div>
           <div style="display:flex;gap:8px;margin-bottom:14px" id="extPrimerSelector">
-            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrimer('none', this)">
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtPrimer('none', this)">
               No Primer
             </div>
-            <div class="coat-btn active" style="flex:1;font-size:12px" onclick="setExtPrimer('spot', this)">
-              Spot Prime<br><span style="font-size:10px;color:var(--text-light)">Brush 120 SF/HR</span>
+            <div class="coat-btn active" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtPrimer('spot', this)">
+              Spot Prime<br><span style="font-size:9px;color:var(--text-light)">Brush 120 SF/HR</span>
             </div>
-            <div class="coat-btn" style="flex:1;font-size:12px" onclick="setExtPrimer('full', this)">
-              Full Prime<br><span style="font-size:10px;color:var(--text-light)">Spray 300 SF/HR</span>
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtPrimer('full_brush', this)">
+              Full Prime<br><span style="font-size:9px;color:var(--text-light)">Brush 120 SF/HR</span>
+            </div>
+            <div class="coat-btn" style="flex:1;font-size:11px;padding:8px 4px" onclick="setExtPrimer('full', this)">
+              Full Prime<br><span style="font-size:9px;color:var(--text-light)">Spray 300 SF/HR</span>
             </div>
           </div>
           <div id="ext-primer-pct-row">
@@ -508,6 +528,24 @@
               <input type="number" id="extDoorsSide" value="1" min="0" onchange="calculateExterior()">
             </div>
           </div>
+          <div class="divider"></div>
+          <div class="section-label">Windows to Paint</div>
+          <div class="form-grid thirds" style="margin-bottom:14px">
+            <div class="field">
+              <label>Single Windows</label>
+              <input type="number" id="extWindowsSingle" value="0" min="0" onchange="calculateExterior()">
+            </div>
+            <div class="field">
+              <label>Double Windows</label>
+              <input type="number" id="extWindowsDouble" value="0" min="0" onchange="calculateExterior()">
+            </div>
+            <div class="field">
+              <label>Triple Windows</label>
+              <input type="number" id="extWindowsTriple" value="0" min="0" onchange="calculateExterior()">
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-light);margin-bottom:14px;">Brush — ~2 hrs/window (prep + primer + 2 coats). Double = 2×, Triple = 3×.</div>
+
           <div class="divider"></div>
           <div class="section-label">Trim / Fascia / Soffits</div>
           <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px;">
@@ -1125,6 +1163,7 @@ let lastResult = null;
 // EXTERIOR STATE
 let extSides = [];
 let extSideCounter = 0;
+let extSidingType = 'aluminum';
 let extPrepLevel = 'medium';
 let extPrepPct = 0.70;
 let extPrimerType = 'spot';
@@ -1137,27 +1176,50 @@ let extMatMarkup = 0.15;
 let extJobSuppliesPct = 0.10;
 let extOverheadPct = 0.15;
 
-// Exterior Production Rates (calibrated from Foster St real job data)
-const EXT_RATES = {
-  power_wash: 400,        // SF/HR
-  prep_light: 80,         // SF/HR — good shape, light sand
-  prep_medium: 45,        // SF/HR — partial peeling, patching
-  prep_heavy: 25,         // SF/HR — severe peeling, orbital sanding
-  primer_spot: 120,       // SF/HR — brush, bare spots
-  primer_full: 300,       // SF/HR — spray, full coverage
-  siding_spray_1st: 350,  // SF/HR — spray 1st coat
-  siding_spray_add: 450,  // SF/HR — spray additional coats
-  siding_spray_back_1st: 200,  // SF/HR — spray + back-brush
-  siding_spray_back_add: 275,
-  siding_brush_1st: 120,  // SF/HR — brush/roll only
-  siding_brush_add: 160,
-  trim_brush_1st: 60,     // SF/HR — trim/fascia brush
+// Exterior Production Rates — PCA based, per siding type
+const SIDING_TYPE_RATES = {
+  wood: {
+    prep_light: 80, prep_medium: 45, prep_heavy: 25,
+    primer_spot: 120, primer_full_brush: 120, primer_full: 300,
+    siding_spray_1st: 350, siding_spray_add: 450,
+    siding_spray_back_1st: 200, siding_spray_back_add: 275,
+    siding_brush_1st: 120, siding_brush_add: 160,
+  },
+  aluminum: {
+    prep_light: 120, prep_medium: 70, prep_heavy: 40,
+    primer_spot: 150, primer_full_brush: 150, primer_full: 350,
+    siding_spray_1st: 400, siding_spray_add: 500,
+    siding_spray_back_1st: 250, siding_spray_back_add: 325,
+    siding_brush_1st: 175, siding_brush_add: 225,
+  },
+  vinyl: {
+    prep_light: 120, prep_medium: 70, prep_heavy: 40,
+    primer_spot: 150, primer_full_brush: 150, primer_full: 350,
+    siding_spray_1st: 400, siding_spray_add: 500,
+    siding_spray_back_1st: 250, siding_spray_back_add: 325,
+    siding_brush_1st: 175, siding_brush_add: 225,
+  },
+  stucco: {
+    prep_light: 60, prep_medium: 35, prep_heavy: 20,
+    primer_spot: 100, primer_full_brush: 100, primer_full: 250,
+    siding_spray_1st: 300, siding_spray_add: 400,
+    siding_spray_back_1st: 175, siding_spray_back_add: 250,
+    siding_brush_1st: 100, siding_brush_add: 130,
+  },
+};
+// Shared rates (not affected by siding type)
+const EXT_RATES_BASE = {
+  power_wash: 400,
+  trim_brush_1st: 60,
   trim_brush_add: 80,
-  door_entry: 1.5,        // hours per door (2 coats)
+  door_entry: 1.5,
   door_garage: 3.0,
   door_side: 1.5,
-  setup_factor: 0.15,     // 15% buffer
+  window_brush: 2.0,
+  setup_factor: 0.15,
 };
+// Merged rates — updated when siding type changes
+let EXT_RATES = Object.assign({}, EXT_RATES_BASE, SIDING_TYPE_RATES['aluminum']);
 
 const EXT_COVERAGE = {
   siding: 350,   // SF per gallon
@@ -2072,6 +2134,28 @@ function updateExtSidesSummary() {
 // ============================================================
 // EXTERIOR — CONTROLS
 // ============================================================
+function setExtSidingType(type, el) {
+  extSidingType = type;
+  EXT_RATES = Object.assign({}, EXT_RATES_BASE, SIDING_TYPE_RATES[type]);
+  document.querySelectorAll('#extSidingTypeSelector .coat-btn').forEach(b => b.classList.remove('active'));
+  el.classList.add('active');
+  // Update prep rate labels to reflect siding type
+  const r = SIDING_TYPE_RATES[type];
+  document.getElementById('extPrepSelector').querySelectorAll('.coat-btn').forEach((btn, i) => {
+    const levels = ['light', 'medium', 'heavy'];
+    const labels = ['Good shape', 'Partial peel', 'Severe peel'];
+    const rate = r['prep_' + levels[i]];
+    btn.innerHTML = levels[i].charAt(0).toUpperCase() + levels[i].slice(1) + '<br><span style="font-size:10px;color:var(--text-light)">' + rate + ' SF/HR<br>' + labels[i] + '</span>';
+  });
+  // Update method rate labels
+  document.getElementById('extMethodSelector').querySelectorAll('.coat-btn').forEach((btn, i) => {
+    const methods = [['spray', 'Spray'], ['spray_back', 'Spray+Back'], ['brush', 'Brush/Roll']];
+    const rate = r['siding_' + methods[i][0] + '_1st'];
+    btn.innerHTML = methods[i][1] + '<br><span style="font-size:10px;color:var(--text-light)">' + rate + ' SF/HR</span>';
+  });
+  calculateExterior();
+}
+
 function setExtPrep(level, el) {
   extPrepLevel = level;
   document.querySelectorAll('#extPrepSelector .coat-btn').forEach(b => b.classList.remove('active'));
@@ -2104,6 +2188,8 @@ function setExtPrimer(type, el) {
     extPrimerPct = pct / 100;
     document.getElementById('extPrimerPctDisplay').textContent = pct + '%';
   }
+  // Update primer product label hint
+  const primerLabel = type === 'full_brush' ? 'Full Brush' : type === 'full' ? 'Full Spray' : type === 'spot' ? 'Spot' : '';
   calculateExterior();
 }
 
@@ -2219,7 +2305,7 @@ function calculateExterior() {
   let primerSF = 0;
   if (extPrimerType !== 'none') {
     primerSF = totalSidingSF * extPrimerPct;
-    const primerRate = extPrimerType === 'spot' ? EXT_RATES.primer_spot : EXT_RATES.primer_full;
+    const primerRate = extPrimerType === 'spot' ? EXT_RATES.primer_spot : extPrimerType === 'full_brush' ? EXT_RATES.primer_full_brush : EXT_RATES.primer_full;
     primerHours = primerSF / primerRate;
   }
 
@@ -2240,8 +2326,15 @@ function calculateExterior() {
   // 7. Doors
   const doorHours = (doorsEntry * EXT_RATES.door_entry) + (doorsGarage * EXT_RATES.door_garage) + (doorsSide * EXT_RATES.door_side);
 
+  // 8. Windows
+  const windowsSingle = parseInt(document.getElementById('extWindowsSingle').value) || 0;
+  const windowsDouble = parseInt(document.getElementById('extWindowsDouble').value) || 0;
+  const windowsTriple = parseInt(document.getElementById('extWindowsTriple').value) || 0;
+  const totalWindowUnits = windowsSingle + (windowsDouble * 2) + (windowsTriple * 3);
+  const windowHours = totalWindowUnits * EXT_RATES.window_brush;
+
   // Apply height factor and buffer
-  const productionHours = (pwHours + prepHours + maskHours + primerHours + sidingPaintHours + trimPaintHours + doorHours) * extHeightFactor;
+  const productionHours = (pwHours + prepHours + maskHours + primerHours + sidingPaintHours + trimPaintHours + doorHours + windowHours) * extHeightFactor;
   const setupHours = productionHours * EXT_RATES.setup_factor;
   const totalHours = productionHours + setupHours;
   const laborCost = totalHours * PAINTER_RATE;
@@ -2261,12 +2354,16 @@ function calculateExterior() {
   const sidingGals = Math.ceil(sidingCoatSF / EXT_COVERAGE.siding * 1.10);
   const trimCoatSF = trimSF * extCoats;
   const trimGals = trimSF > 0 ? Math.ceil(trimCoatSF / EXT_COVERAGE.trim * 1.10) : 0;
+  const windowSF = totalWindowUnits * 8;  // ~8 SF per window unit (frame/sash)
+  const windowCoatSF = windowSF * (extCoats + 1);  // +1 for primer coat
+  const windowGals = totalWindowUnits > 0 ? Math.ceil(windowCoatSF / EXT_COVERAGE.trim * 1.10) : 0;
   const primerGals = primerSF > 0 ? Math.ceil(primerSF / EXT_COVERAGE.primer * 1.10) : 0;
 
   const sidingMatCost = sidingGals * sidingPrice;
   const trimMatCost = trimGals * trimPrice;
+  const windowMatCost = windowGals * trimPrice;  // windows use trim paint
   const primerMatCost = primerGals * primerPrice;
-  const totalMatBase = sidingMatCost + trimMatCost + primerMatCost;
+  const totalMatBase = sidingMatCost + trimMatCost + windowMatCost + primerMatCost;
   const totalMatMarkup = totalMatBase * extMatMarkup;
   const jobSupplies = totalMatBase * extJobSuppliesPct;
   const totalMaterials = totalMatBase + totalMatMarkup + jobSupplies;
@@ -2285,6 +2382,7 @@ function calculateExterior() {
     jobType: 'exterior',
     totalSidingSF, trimSF, prepSF, primerSF,
     doorsEntry, doorsGarage, doorsSide,
+    windowsSingle, windowsDouble, windowsTriple, totalWindowUnits, windowHours, windowGals, windowMatCost,
     pwHours, prepHours, maskHours, primerHours, sidingPaintHours, trimPaintHours, doorHours,
     productionHours, setupHours, totalHours,
     laborCost, jobDays,
@@ -2298,7 +2396,7 @@ function calculateExterior() {
     totalCost, price, profit, margin,
     extMatMarkup,
     extNumPainters, extCoats, extHeightFactor,
-    extPrepLevel, extPrepPct, extMethod,
+    extSidingType, extPrepLevel, extPrepPct, extMethod,
     includeTrim,
   };
 
@@ -2326,13 +2424,15 @@ function renderExteriorResults() {
 
   // Surfaces
   let surfHTML = '';
-  surfHTML += '<div class="breakdown-row"><span class="label">🏡 Siding</span><span class="val">' + r.totalSidingSF.toFixed(0) + ' SF</span></div>';
+  const sidingTypeLabel = {wood: '🪵 Wood', aluminum: '🔩 Aluminum', vinyl: '🏠 Vinyl', stucco: '🧱 Stucco'}[r.extSidingType] || 'Siding';
+  surfHTML += '<div class="breakdown-row"><span class="label">' + sidingTypeLabel + ' Siding</span><span class="val">' + r.totalSidingSF.toFixed(0) + ' SF</span></div>';
   if (r.prepSF > 0) surfHTML += '<div class="breakdown-row"><span class="label">🪚 Prep Area (' + Math.round(r.extPrepPct*100) + '%)</span><span class="val">' + r.prepSF.toFixed(0) + ' SF</span></div>';
-  if (r.primerSF > 0) surfHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (' + r.extPrimerType + ')</span><span class="val">' + r.primerSF.toFixed(0) + ' SF</span></div>';
+  if (r.primerSF > 0) surfHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">🪣 Primer (' + (r.extPrimerType === 'full_brush' ? 'full brush' : r.extPrimerType) + ')</span><span class="val">' + r.primerSF.toFixed(0) + ' SF</span></div>';
   if (r.trimSF > 0) surfHTML += '<div class="breakdown-row"><span class="label">📏 Trim/Fascia</span><span class="val">' + r.trimSF.toFixed(0) + ' SF</span></div>';
   if (r.doorsEntry > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚪 Entry Doors</span><span class="val">' + r.doorsEntry + '</span></div>';
   if (r.doorsGarage > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚗 Garage Doors</span><span class="val">' + r.doorsGarage + '</span></div>';
   if (r.doorsSide > 0) surfHTML += '<div class="breakdown-row"><span class="label">🚪 Side/Back Doors</span><span class="val">' + r.doorsSide + '</span></div>';
+  if (r.totalWindowUnits > 0) surfHTML += '<div class="breakdown-row"><span class="label">🪟 Windows to Paint</span><span class="val">' + r.totalWindowUnits + ' units (' + r.windowsSingle + 'S/' + r.windowsDouble + 'D/' + r.windowsTriple + 'T)</span></div>';
   document.getElementById('r-surfaces').innerHTML = surfHTML;
 
   // Labor
@@ -2345,10 +2445,11 @@ function renderExteriorResults() {
     '<div class="breakdown-row"><span class="label">💦 Power Wash</span><span class="val">' + fmtN(r.pwHours * r.extHeightFactor) + ' hrs</span></div>' +
     '<div class="breakdown-row"><span class="label">🪚 Prep — ' + prepLabel + ' (' + Math.round(r.extPrepPct*100) + '%)</span><span class="val">' + fmtN(r.prepHours * r.extHeightFactor) + ' hrs</span></div>' +
     '<div class="breakdown-row"><span class="label">🎭 Masking</span><span class="val">' + fmtN(r.maskHours * r.extHeightFactor) + ' hrs</span></div>' +
-    (r.primerHours > 0 ? '<div class="breakdown-row"><span class="label">🪣 Primer (' + r.extPrimerType + ')</span><span class="val">' + fmtN(r.primerHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
+    (r.primerHours > 0 ? '<div class="breakdown-row"><span class="label">🪣 Primer (' + (r.extPrimerType === 'full_brush' ? 'full brush' : r.extPrimerType) + ')</span><span class="val">' + fmtN(r.primerHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
     '<div class="breakdown-row"><span class="label">🎨 Paint — ' + methodLabel + ' × ' + r.extCoats + ' coats</span><span class="val">' + fmtN(r.sidingPaintHours * r.extHeightFactor) + ' hrs</span></div>' +
     (r.trimPaintHours > 0 ? '<div class="breakdown-row"><span class="label">📏 Trim Paint</span><span class="val">' + fmtN(r.trimPaintHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
     (r.doorHours > 0 ? '<div class="breakdown-row"><span class="label">🚪 Doors</span><span class="val">' + fmtN(r.doorHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
+    (r.windowHours > 0 ? '<div class="breakdown-row"><span class="label">🪟 Windows (' + r.totalWindowUnits + ' units)</span><span class="val">' + fmtN(r.windowHours * r.extHeightFactor) + ' hrs</span></div>' : '') +
     '<div class="breakdown-row"><span class="label">Setup & cleanup (15%)</span><span class="val">' + fmtN(r.setupHours) + ' hrs</span></div>' +
     '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:6px;"><span class="label" style="font-weight:700">Total hours on job</span><span class="val" style="font-weight:700">' + fmtN(r.totalHours) + ' hrs</span></div>' +
     '<div class="breakdown-row"><span class="label">Job duration (' + r.extNumPainters + ' painter' + (r.extNumPainters>1?'s':'') + ')</span><span class="val">' + r.jobDays + ' day' + (r.jobDays>1?'s':'') + '</span></div>' +
@@ -2369,6 +2470,7 @@ function renderExteriorResults() {
   if (r.primerGals > 0) matHTML += '<div class="breakdown-row" style="background:#fff8e8"><span class="label">' + r.primerName + '</span><span class="val">' + r.primerGals + ' gal — ' + fmt(r.primerMatCost) + '</span></div>';
   matHTML += '<div class="breakdown-row"><span class="label">' + r.sidingName + '</span><span class="val">' + r.sidingGals + ' gal — ' + fmt(r.sidingMatCost) + '</span></div>';
   if (r.trimGals > 0) matHTML += '<div class="breakdown-row"><span class="label">' + r.trimPaintName + ' (trim)</span><span class="val">' + r.trimGals + ' gal — ' + fmt(r.trimMatCost) + '</span></div>';
+  if (r.windowGals > 0) matHTML += '<div class="breakdown-row"><span class="label">' + r.trimPaintName + ' (windows)</span><span class="val">' + r.windowGals + ' gal — ' + fmt(r.windowMatCost) + '</span></div>';
   matHTML += '<div class="breakdown-row" style="border-top:1px solid var(--gray2);margin-top:4px;padding-top:8px;"><span class="label">Subtotal SW Paint</span><span class="val">' + fmt(r.totalMatBase) + '</span></div>';
   matHTML += '<div class="breakdown-row" style="background:#f0fff4"><span class="label" style="color:var(--green)">+ Markup ' + Math.round(r.extMatMarkup*100) + '%</span><span class="val" style="color:var(--green)">' + fmt(r.totalMatMarkup) + '</span></div>';
   if (r.jobSupplies > 0) matHTML += '<div class="breakdown-row"><span class="label">🧰 Job Supplies ' + Math.round(r.extJobSuppliesPct*100) + '%</span><span class="val">' + fmt(r.jobSupplies) + '</span></div>';
